@@ -144,11 +144,11 @@ async function callOpenRouterWithFallback(systemPrompt, userPrompt) {
     const modelsToTry = [
         "tngtech/deepseek-r1t-chimera:free",        
         "tngtech/deepseek-r1t2-chimera:free",
+        "arcee-ai/trinity-large-preview:free",
         "google/gemini-2.0-flash-exp:free",           
         "openai/gpt-oss-20b:free",
         "mistralai/mistral-small-3.2-24b-instruct:free",
-        "google/gemma-3-12b-it:free",
-        "meta-llama/llama-3.1-8b-instruct"
+        "openai/gpt-4o-mini",
                       
       ];
 
