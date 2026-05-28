@@ -1,3 +1,5 @@
+--- START OF FILE script.js ---
+
 function applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
@@ -67,14 +69,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const confettiCanvas = document.getElementById('confetti-canvas');
     const onboardingHelpBtn = document.getElementById('onboarding-help-btn');
     const clickSound = new Audio('assets/click.wav'); 
-    clickSound.volume = 0.5; // Adjust volume as needed (0.0 to 1.0)
+    clickSound.volume = 0.5;
 
     function playClickSound() {
-        // Rewind to the start in case it's played again quickly
         clickSound.currentTime = 0; 
-        clickSound.play().catch(error => {
-            console.error("Error playing click sound:", error);
-        });
+        clickSound.play().catch(error => console.error("Error playing click sound:", error));
     }
 
     const colorMap = {
@@ -89,9 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
         central: 'var(--primary-coral)'
     };
 
-    if (registerToggleBtn) {
-        registerToggleBtn.classList.add('needs-attention');
-    }
+    if (registerToggleBtn) registerToggleBtn.classList.add('needs-attention');
 
     const radialForce = d3.forceRadial(d => {
         if (d.isCentral) return 0;
@@ -113,23 +110,22 @@ document.addEventListener('DOMContentLoaded', () => {
     let viewState = { offset: 0, hasMore: true };
     let activeTour = null;
 
-    
     function debounce(func, wait, immediate) {
-    let timeout;
-    return function() {
-        const context = this, args = arguments;
-        const later = function() {
-            timeout = null;
-            if (!immediate) func.apply(context, args);
+        let timeout;
+        return function() {
+            const context = this, args = arguments;
+            const later = function() {
+                timeout = null;
+                if (!immediate) func.apply(context, args);
+            };
+            const callNow = immediate && !timeout;
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+            if (callNow) func.apply(context, args);
         };
-        const callNow = immediate && !timeout;
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-        if (callNow) func.apply(context, args);
     };
-};
 
-// --- Onboarding Logic ---
+    // --- Onboarding Logic ---
     function createTour(options = {}) {
         if (activeTour && activeTour.isActive()) {
             activeTour.cancel();
@@ -150,87 +146,33 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         activeTour = tour;
-        const cleanup = () => {
-            if (activeTour === tour) {
-                activeTour = null;
-            }
-        };
+        const cleanup = () => { if (activeTour === tour) activeTour = null; };
         tour.on('complete', cleanup);
         tour.on('cancel', cleanup);
-
         return tour;
     }
 
     function startComprehensiveTour(force = false) {
-        if (!force && localStorage.getItem('wordsplainer_comprehensive_tour_complete')) {
-            return;
-        }
-
+        if (!force && localStorage.getItem('wordsplainer_comprehensive_tour_complete')) return;
         const tour = createTour();
+        tour.addStep({ id: 'step1-welcome', title: 'Welcome to Wordsplainer!', text: 'This is an interactive map for words. To begin, click the central plus icon to add your first word.', attachTo: { element: '.node.central-node', on: 'bottom' }});
+        tour.addStep({ id: 'step2-views', title: 'Change Your View', text: 'Once a word is on the graph, use these buttons to explore its different relationships, like combinations, synonyms, or real-world context.', attachTo: { element: '#controls-dock', on: 'top' }});
+        tour.addStep({ id: 'step3-explore', title: 'Navigate the Graph', text: 'New words will appear in bubbles around the center. <b>Click any word in a bubble to make it the new center.</b> This is how you find connections!', attachTo: { element: '#graph-container', on: 'top' }});
+        tour.addStep({ id: 'step4-settings', title: 'Customize Your Results', text: 'Make it yours! Choose the register (conversational, academic, or business), set the difficulty level (higher or lower), and decide who it’s for (teens or adults).', attachTo: { element: '#canvas-controls', on: 'left' }});
 
-        tour.addStep({
-            id: 'step1-welcome',
-            title: 'Welcome to Wordsplainer!',
-            text: 'This is an interactive map for words. To begin, click the central plus icon to add your first word.',
-            attachTo: { element: '.node.central-node', on: 'bottom' },
-        });
+        const isMobile = window.innerWidth < 768;
+        const gameStepOptions = {
+            id: 'step5-game', title: 'Word Path Challenge', text: 'Ready for a game? Try to find a path from a <b>START</b> word to a <b>TARGET</b> word in the fewest steps!', scrollTo: true,
+            buttons: [{ action() { return this.back(); }, classes: 'shepherd-button-secondary', text: 'Back' }, { action() { this.complete(); }, text: 'Got it!' }]
+        };
 
-        tour.addStep({
-            id: 'step2-views',
-            title: 'Change Your View',
-            text: 'Once a word is on the graph, use these buttons to explore its different relationships, like combinations, synonyms, or real-world context.',
-            attachTo: { element: '#controls-dock', on: 'top' },
-        });
-
-        tour.addStep({
-            id: 'step3-explore',
-            title: 'Navigate the Graph',
-            text: 'New words will appear in bubbles around the center. <b>Click any word in a bubble to make it the new center.</b> This is how you find connections!',
-            attachTo: { element: '#graph-container', on: 'top' }
-        });
-
-        tour.addStep({
-            id: 'step4-settings',
-            title: 'Customize Your Results',
-            text: 'Make it yours! Choose the register (conversational, academic, or business), set the difficulty level (higher or lower), and decide who it’s for (teens or adults).',
-            attachTo: { element: '#canvas-controls', on: 'left' },
-        });
-
-        const isMobile = window.innerWidth < 768; // Common breakpoint for mobile
-
-const gameStepOptions = {
-    id: 'step5-game',
-    title: 'Word Path Challenge',
-    text: 'Ready for a game? Try to find a path from a <b>START</b> word to a <b>TARGET</b> word in the fewest steps!',
-    scrollTo: true, // Ensures the element is in view
-    buttons: [
-        { action() { return this.back(); }, classes: 'shepherd-button-secondary', text: 'Back' },
-        { action() { this.complete(); }, text: 'Got it!' }
-    ]
-};
-
-if (isMobile) {
-    // On mobile, the #play-game-btn is likely at the bottom of the screen,
-    // so attaching 'on: top' would push the popover off-screen.
-    // We attach to the whole dock instead, which is a safer target.
-    gameStepOptions.attachTo = { element: '#controls-dock', on: 'top' };
-} else {
-    // Keep the original, more specific attachment for desktop.
-    gameStepOptions.attachTo = { element: '#play-game-btn', on: 'top' };
-}
-
-tour.addStep(gameStepOptions);
-
-        tour.on('complete', () => {
-            localStorage.setItem('wordsplainer_comprehensive_tour_complete', 'true');
-        });
-
+        gameStepOptions.attachTo = isMobile ? { element: '#controls-dock', on: 'top' } : { element: '#play-game-btn', on: 'top' };
+        tour.addStep(gameStepOptions);
+        tour.on('complete', () => localStorage.setItem('wordsplainer_comprehensive_tour_complete', 'true'));
         tour.start();
     }
 
-    function showHelpTour() {
-        startComprehensiveTour(true);
-    }
+    function showHelpTour() { startComprehensiveTour(true); }
 
     // --- Helper Functions ---
     function getViewportCenter() {
@@ -241,18 +183,14 @@ tour.addStep(gameStepOptions);
     }
 
     function stopRegisterButtonAnimation() {
-        if (registerToggleBtn) {
-            registerToggleBtn.classList.remove('needs-attention');
-        }
+        if (registerToggleBtn) registerToggleBtn.classList.remove('needs-attention');
     }
 
     function speak(text, lang = 'en-US') {
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = lang;
-            utterance.pitch = 1;
-            utterance.rate = 1;
+            utterance.lang = lang; utterance.pitch = 1; utterance.rate = 1;
             window.speechSynthesis.speak(utterance);
         } else {
             alert("Sorry, your browser does not support text-to-speech.");
@@ -261,19 +199,14 @@ tour.addStep(gameStepOptions);
 
     function copyToClipboard(text) {
         const cleanedText = text.split('\n\n(')[0];
-        if (!navigator.clipboard) {
-            alert("Sorry, your browser does not support the Clipboard API.");
-            return;
-        }
+        if (!navigator.clipboard) { alert("Sorry, your browser does not support the Clipboard API."); return; }
         navigator.clipboard.writeText(cleanedText).then(() => {
-            tooltip.textContent = 'Copied to clipboard!';
-            tooltip.classList.add('visible');
-            setTimeout(() => { tooltip.classList.remove('visible'); }, 1500);
+            tooltip.textContent = 'Copied to clipboard!'; tooltip.classList.add('visible');
+            setTimeout(() => tooltip.classList.remove('visible'), 1500);
         }).catch(err => {
             console.error('Failed to copy text: ', err);
-            tooltip.textContent = 'Copy failed!';
-            tooltip.classList.add('visible');
-            setTimeout(() => { tooltip.classList.remove('visible'); }, 1500);
+            tooltip.textContent = 'Copy failed!'; tooltip.classList.add('visible');
+            setTimeout(() => tooltip.classList.remove('visible'), 1500);
         });
     }
 
@@ -281,18 +214,8 @@ tour.addStep(gameStepOptions);
         try {
             console.log(`Fetching data: ${word}, ${type}, register: ${currentRegister}, proficiency: ${currentProficiency}, age: ${currentAgeGroup}`);
             const response = await fetch('/.netlify/functions/wordsplainer', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    word: word,
-                    type: type,
-                    offset: offset,
-                    limit: limit,
-                    language: language,
-                    register: currentRegister,
-                    proficiency: currentProficiency,
-                    ageGroup: currentAgeGroup
-                }),
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ word, type, offset, limit, language, register: currentRegister, proficiency: currentProficiency, ageGroup: currentAgeGroup }),
             });
             if (!response.ok) {
                 let errorMessage;
@@ -305,12 +228,39 @@ tour.addStep(gameStepOptions);
                 }
                 throw new Error(errorMessage);
             }
-            const data = await response.json();
-            return data;
+            return await response.json();
         } catch (error) {
             console.error("fetchData error:", error);
             throw new Error(`Failed to fetch ${type} for "${word}": ${error.message}`);
         }
+    }
+
+    function updateClusterVisibilities() {
+        graphClusters.forEach((cluster, key) => {
+            if (key === HISTORY_CLUSTER_ID) {
+                // Ensure history nodes are always visibly processed
+                cluster.nodes.forEach(n => n.visible = true);
+                return;
+            }
+
+            if (key === currentActiveCentral) {
+                // Expand active cluster
+                cluster.nodes.forEach(node => {
+                    const isExample = node.type === 'example';
+                    if (!isExample) {
+                        node.visible = node.isCentral || node.type === 'add' || node.type === currentView;
+                    } else {
+                        const sourceNode = cluster.nodes.find(n => n.id === node.sourceNodeId);
+                        node.visible = sourceNode ? sourceNode.visible : false;
+                    }
+                });
+            } else {
+                // Collapse inactive central clusters to cleanly separate the view
+                cluster.nodes.forEach(node => {
+                    node.visible = !!node.isCentral; // Show only the central node itself
+                });
+            }
+        });
     }
 
     function forceCluster() {
@@ -318,6 +268,7 @@ tour.addStep(gameStepOptions);
         return function(alpha) {
             const allNodes = getConsolidatedGraphData().nodes;
             for (let node of allNodes) {
+                if (node.visible === false) continue; 
                 if (node.isCentral || !node.clusterId || !graphClusters.has(node.clusterId)) continue;
                 const cluster = graphClusters.get(node.clusterId);
                 const target = cluster.center;
@@ -328,28 +279,29 @@ tour.addStep(gameStepOptions);
     }
 
     function getCollisionRadius(d) {
-    const isMobile = window.innerWidth < 480;
-    if (d.isCentral) return isMobile ? 45 : 60;
-    if (d.width && d.height) return Math.sqrt(d.width * d.width + d.height * d.height) / 2 + (isMobile ? 8 : 15);
-    if (d.type === 'add') return isMobile ? 20 : 25;
-    return isMobile ? 35 : 45;
-}
+        const isMobile = window.innerWidth < 480;
+        if (d.isCentral) return isMobile ? 45 : 60;
+        if (d.width && d.height) return Math.sqrt(d.width * d.width + d.height * d.height) / 2 + (isMobile ? 8 : 15);
+        if (d.type === 'add') return isMobile ? 20 : 25;
+        return isMobile ? 35 : 45;
+    }
 
-const simulation = d3.forceSimulation()
-    .force("link", d3.forceLink().id(d => d.id)
-        .distance(d => {
-            const isMobile = window.innerWidth < 480;
-            return isMobile ? (d.target.type === 'example' ? 70 : 100) : (d.target.type === 'example' ? 100 : 150);
-        })
-        .strength(0.7))
-    .force("charge", d3.forceManyBody()
-        .strength(d => {
-            const isMobile = window.innerWidth < 480;
-            return d.isCentral ? (isMobile ? -1000 : -1500) : (isMobile ? -250 : -400);
-        })
-        .distanceMax(window.innerWidth < 480 ? 300 : 500))
-    .force("collision", d3.forceCollide().radius(getCollisionRadius).strength(0.9))
-    .force("cluster", forceCluster());
+    const simulation = d3.forceSimulation()
+        .force("link", d3.forceLink().id(d => d.id)
+            .distance(d => {
+                const isMobile = window.innerWidth < 480;
+                return isMobile ? (d.target.type === 'example' ? 70 : 100) : (d.target.type === 'example' ? 100 : 150);
+            })
+            // Dramatically lower strength for cross connections so they don't drag 700px apart clusters violently together!
+            .strength(d => d.type === 'cross-cluster' ? 0.02 : 0.7))
+        .force("charge", d3.forceManyBody()
+            .strength(d => {
+                const isMobile = window.innerWidth < 480;
+                return d.isCentral ? (isMobile ? -1000 : -1500) : (isMobile ? -250 : -400);
+            })
+            .distanceMax(window.innerWidth < 480 ? 300 : 500))
+        .force("collision", d3.forceCollide().radius(getCollisionRadius).strength(0.9))
+        .force("cluster", forceCluster());
 
     const zoomBehavior = d3.zoom().scaleExtent([0.1, 5]).on("zoom", (event) => {
         graphGroup.attr("transform", event.transform);
@@ -358,26 +310,17 @@ const simulation = d3.forceSimulation()
     svg.call(zoomBehavior);
 
     simulation.on("tick", () => {
-        // Defensive coding to prevent errors if source/target on a link are not yet defined
         graphGroup.selectAll('.link')
-            .attr("x1", d => d.source ? d.source.x : 0)
-            .attr("y1", d => d.source ? d.source.y : 0)
-            .attr("x2", d => d.target ? d.target.x : 0)
-            .attr("y2", d => d.target ? d.target.y : 0);
+            .attr("x1", d => d.source ? d.source.x : 0).attr("y1", d => d.source ? d.source.y : 0)
+            .attr("x2", d => d.target ? d.target.x : 0).attr("y2", d => d.target ? d.target.y : 0);
 
-        // Defensive coding for nodes that might not have x/y assigned yet
         graphGroup.selectAll('.node').attr("transform", d => {
-            if (!d || d.x === undefined || d.y === undefined) {
-                return null; // Don't set transform if position is not calculated
-            }
+            if (!d || d.x === undefined || d.y === undefined) return null;
             return `translate(${d.x},${d.y})`;
         });
         
         iconGroup.selectAll('.icon-wrapper').attr("transform", d => {
-            // Check if data and coordinates are valid before transforming
-            if (!d || d.x === undefined || d.y === undefined) {
-                return `translate(-1000, -1000)`;
-            }
+            if (!d || d.x === undefined || d.y === undefined) return `translate(-1000, -1000)`;
             if (d.isCentral && !d.isHistoryMaster) return `translate(${d.x}, ${d.y + 45 + 15})`;
             if (d.type === 'example' && d.width && d.height) {
                 const x = d.x + (d.width / 2) - 10;
@@ -389,23 +332,23 @@ const simulation = d3.forceSimulation()
     });
 
     function updateGraph() {
-    let pendingHeightCalculations = 0;
-    const { nodes: allNodes, links: allLinks } = getConsolidatedGraphData();
-    const visibleNodes = allNodes.filter(n => n.visible !== false);
-    const visibleNodeIds = new Set(visibleNodes.map(n => n.id));
-    const visibleLinks = allLinks.filter(l => visibleNodeIds.has(l.source.id || l.source) && visibleNodeIds.has(l.target.id || l.target));
-    const { width, height } = graphContainer.getBoundingClientRect();
-    graphGroup.selectAll(".status-text, .prompt-plus, .loading-spinner").remove();
+        let pendingHeightCalculations = 0;
+        const { nodes: allNodes, links: allLinks } = getConsolidatedGraphData();
+        const visibleNodes = allNodes.filter(n => n.visible !== false);
+        const visibleNodeIds = new Set(visibleNodes.map(n => n.id));
+        const visibleLinks = allLinks.filter(l => visibleNodeIds.has(l.source.id || l.source) && visibleNodeIds.has(l.target.id || l.target));
+        const { width, height } = graphContainer.getBoundingClientRect();
+        
+        graphGroup.selectAll(".status-text, .prompt-plus, .loading-spinner").remove();
 
-    graphGroup.selectAll(".link").data(visibleLinks, d => `${d.source.id || d.source}-${d.target.id || d.target}`).join(
-        enter => enter.append("line").attr("class", d => `link ${d.target.type === 'example' ? 'link-example' : ''}`).style("opacity", 0).style("stroke-width", 0)
-            .transition().duration(800).delay((d, i) => i * 50).ease(d3.easeCircleOut).style("opacity", 1).style("stroke-width", d => d.type === 'cross-cluster' ? 2 : 1),
-        update => update.attr("class", d => `link ${d.target.type === 'example' ? 'link-example' : ''}`),
-        exit => exit.transition().duration(400).ease(d3.easeCircleIn).style("opacity", 0).style("stroke-width", 0).remove()
-    );
+        graphGroup.selectAll(".link").data(visibleLinks, d => `${d.source.id || d.source}-${d.target.id || d.target}`).join(
+            enter => enter.append("line").attr("class", d => `link ${d.target.type === 'example' ? 'link-example' : ''}`).style("opacity", 0).style("stroke-width", 0)
+                .transition().duration(800).delay((d, i) => i * 50).ease(d3.easeCircleOut).style("opacity", 1).style("stroke-width", d => d.type === 'cross-cluster' ? 2 : 1),
+            update => update.attr("class", d => `link ${d.target.type === 'example' ? 'link-example' : ''}`),
+            exit => exit.transition().duration(400).ease(d3.easeCircleIn).style("opacity", 0).style("stroke-width", 0).remove()
+        );
 
-    const nodeGroups = graphGroup.selectAll(".node").data(visibleNodes, d => d.id)
-        .join(
+        const nodeGroups = graphGroup.selectAll(".node").data(visibleNodes, d => d.id).join(
             enter => enter.append("g")
                 .style("opacity", 0)
                 .attr("transform", d => {
@@ -426,112 +369,101 @@ const simulation = d3.forceSimulation()
                 .remove()
         );
 
-    nodeGroups
-        .attr("class", d => `node ${d.isCentral ? `central-node ${d.clusterId === currentActiveCentral ? 'active-central' : ''}` : `node-${d.type}`}`)
-        .call(d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended).filter(event => !event.target.classList.contains('interactive-word')))
-        .on("mouseover", handleMouseOver)
-        .on("mouseout", handleMouseOut)
-        .on("click", handleNodeClick);
+        nodeGroups
+            .attr("class", d => `node ${d.isCentral ? `central-node ${d.clusterId === currentActiveCentral ? 'active-central' : ''}` : `node-${d.type}`}`)
+            .call(d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended).filter(event => !event.target.classList.contains('interactive-word')))
+            .on("mouseover", handleMouseOver)
+            .on("mouseout", handleMouseOut)
+            .on("click", handleNodeClick);
 
-    nodeGroups.each(function(d) {
-        const selection = d3.select(this);
-        selection.selectAll("circle, rect, foreignObject, text").remove();
+        nodeGroups.each(function(d) {
+            const selection = d3.select(this);
+            selection.selectAll("circle, rect, foreignObject, text").remove();
 
-        if (d.isCentral) {
-            const r = d.isHistoryMaster ? 60 : 45;
-            const shadow = d.isHistoryMaster ? "drop-shadow(0 0 10px var(--text-muted))" : "drop-shadow(0 0 10px var(--primary-coral))";
-            const fill = d.isHistoryMaster ? "var(--text-secondary)" : colorMap['central'];
-            selection.append("circle").attr("r", r).style("filter", shadow).style("fill", fill);
-            selection.append("text").attr("class", "node-text").text(d.word || d.id).attr("dy", "0.3em").style("font-weight", "bold").style("font-size", d.isHistoryMaster ? "18px" : "16px");
-        } else if (d.type === 'add') {
-            selection.append("circle").attr("r", 20);
-            selection.append("text").text('+').style("font-size", "24px").style("font-weight", "300").style("fill", "var(--primary-coral)");
-        } else {
-            if (d.isHistory) {
-                selection.style("opacity", 0.7);
-                selection.append("circle").attr("r", 25)
-                    .style("fill", "var(--text-muted)"); // Consistent muted color
-                selection.append("text").attr("class", "node-text").text(d.word).attr("dy", "0.3em");
-                selection.style("cursor", "pointer");
+            if (d.isCentral) {
+                const r = d.isHistoryMaster ? 60 : 45;
+                const shadow = d.isHistoryMaster ? "drop-shadow(0 0 10px var(--text-muted))" : "drop-shadow(0 0 10px var(--primary-coral))";
+                const fill = d.isHistoryMaster ? "var(--text-secondary)" : colorMap['central'];
+                selection.append("circle").attr("r", r).style("filter", shadow).style("fill", fill);
+                selection.append("text").attr("class", "node-text").text(d.word || d.id).attr("dy", "0.3em").style("font-weight", "bold").style("font-size", d.isHistoryMaster ? "18px" : "16px");
+            } else if (d.type === 'add') {
+                selection.append("circle").attr("r", 20);
+                selection.append("text").text('+').style("font-size", "24px").style("font-weight", "300").style("fill", "var(--primary-coral)");
             } else {
-                // --- START OF FIX ---
-                // Explicitly reset opacity to 1 for all active nodes.
-                // This prevents reused 'history' nodes from staying faded.
-                selection.style("opacity", 1);
-                // --- END OF FIX ---
+                if (d.isHistory) {
+                    selection.style("opacity", 0.7);
+                    selection.append("circle").attr("r", 25).style("fill", "var(--text-muted)");
+                    selection.append("text").attr("class", "node-text").text(d.word).attr("dy", "0.3em");
+                    selection.style("cursor", "pointer");
+                } else {
+                    selection.style("opacity", 1);
+                    const isExample = d.type === 'example';
+                    if (!isExample) selection.append("circle").attr("r", 18).attr("fill", colorMap[d.type] || 'var(--text-muted)');
+                    
+                    const PADDING = isExample ? 0 : 12;
+                    const circleRadius = isExample ? 0 : 18;
 
-                const isExample = d.type === 'example';
-                if (!isExample) {
-                    selection.append("circle").attr("r", 18)
-                        .attr("fill", colorMap[d.type] || 'var(--text-muted)');
-                }
-                const PADDING = isExample ? 0 : 12;
-                const circleRadius = isExample ? 0 : 18;
+                    const foreignObject = selection.append("foreignObject")
+                        .attr("class", "node-html-wrapper").style("opacity", 0).attr("height", 20);
 
-                const foreignObject = selection.append("foreignObject")
-                    .attr("class", "node-html-wrapper")
-                    // Note: 'x' attribute is now set inside setTimeout after width is known
-                    .style("opacity", 0)
-                    .attr("height", 20); // Start with a default height
+                    const div = foreignObject.append("xhtml:div").attr("class", "node-html-content");
+                    createInteractiveText(div, d.text, (word) => handleWordSubmitted(word, true, d));
 
-                const div = foreignObject.append("xhtml:div").attr("class", "node-html-content");
-                createInteractiveText(div, d.text, (word) => handleWordSubmitted(word, true, d));
+                    foreignObject.transition().duration(400).style("opacity", 1);
 
-                foreignObject.transition().duration(400).style("opacity", 1);
+                    if (!d.height) { pendingHeightCalculations++; }
+                    setTimeout(() => {
+                        if (div.node() && foreignObject.node()) {
+                            const textHeight = div.node().scrollHeight;
+                            const textWidth = foreignObject.node().getBoundingClientRect().width / d3.zoomTransform(svg.node()).k;
+                            
+                            foreignObject
+                                .attr("height", textHeight)
+                                .attr("y", isExample ? -textHeight / 2 : -textHeight / 2)
+                                .attr("x", isExample ? -textWidth / 2 : circleRadius + PADDING);
 
-                if (!d.height) { pendingHeightCalculations++; }
-                setTimeout(() => {
-                    if (div.node() && foreignObject.node()) {
-                        // --- START OF CRITICAL FIX ---
-                        const textHeight = div.node().scrollHeight;
-                        // Read the width from the CSS-driven element size
-                        const textWidth = foreignObject.node().getBoundingClientRect().width / d3.zoomTransform(svg.node()).k;
-                        
-                        foreignObject
-                            .attr("height", textHeight)
-                            .attr("y", isExample ? -textHeight / 2 : -textHeight / 2)
-                            .attr("x", isExample ? -textWidth / 2 : circleRadius + PADDING); // Set x now
+                            d.width = isExample ? textWidth : circleRadius * 2 + PADDING + textWidth;
+                            d.height = Math.max(circleRadius * 2, textHeight);
 
-                        d.width = isExample ? textWidth : circleRadius * 2 + PADDING + textWidth;
-                        d.height = Math.max(circleRadius * 2, textHeight);
-                        // --- END OF CRITICAL FIX ---
-
-                        pendingHeightCalculations--;
-                        if (pendingHeightCalculations === 0) {
-                            if (simulation.alpha() < 0.1) {
-                                simulation.alpha(0.1).restart();
+                            pendingHeightCalculations--;
+                            if (pendingHeightCalculations === 0) {
+                                if (simulation.alpha() < 0.1) simulation.alpha(0.1).restart();
                             }
                         }
-                    }
-                }, 50);
-                selection.style("cursor", "pointer");
+                    }, 50);
+                    selection.style("cursor", "pointer");
+                }
             }
-        }
-    });
+        });
 
-    const iconData = visibleNodes.filter(d => (d.isCentral && !d.isHistoryMaster) || d.type === 'example');
-    iconGroup.selectAll('.icon-wrapper').data(iconData, d => d.id).join(
-        enter => {
-            const iconWrapper = enter.append('g').attr('class', 'icon-wrapper').style('opacity', 0);
-            iconWrapper.filter(d => d.isCentral && !d.isHistoryMaster).append('g').attr('class', 'tts-icon-group').on('click', (event, d) => { speak(d.word); })
-                .append('svg').attr('class', 'tts-icon').attr('width', 24).attr('height', 24).attr('viewBox', '0 0 16 16')
-                .html(`<title>Read aloud</title><path d="M9 4a.5.5 0 0 0-.812-.39L5.825 5.5H3.5A.5.5 0 0 0 3 6v4a.5.5 0 0 0 .5.5h2.325l2.363 1.89A.5.5 0 0 0 9 12zM6.312 6.39 8 5.04v5.92L6.312 9.61A.5.5 0 0 0 6 9.5H4v-3h2a.5.5 0 0 0 .312-.11M12.025 8a4.5 4.5 0 0 1-1.318 3.182L10 10.475A3.5 3.5 0 0 0 11.025 8 3.5 3.5 0 0 0 10 5.525l.707-.707A4.5 4.5 0 0 1 12.025 8"/>`);
-            iconWrapper.filter(d => d.type === 'example').append('g').attr('class', 'copy-icon-group').on('click', (event, d) => { copyToClipboard(d.text); })
-                .append('svg').attr('class', 'copy-icon').attr('width', 20).attr('height', 20).attr('viewBox', '0 0 16 16')
-                .html(`<title>Copy example</title><path fill-rule="evenodd" d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1z"/>`);
-            return iconWrapper.transition().duration(600).delay(500).style('opacity', 1);
-        },
-        update => update,
-        exit => exit.transition().duration(400).style('opacity', 0).remove()
-    );
+        const iconData = visibleNodes.filter(d => (d.isCentral && !d.isHistoryMaster) || d.type === 'example');
+        iconGroup.selectAll('.icon-wrapper').data(iconData, d => d.id).join(
+            enter => {
+                const iconWrapper = enter.append('g').attr('class', 'icon-wrapper').style('opacity', 0);
+                iconWrapper.filter(d => d.isCentral && !d.isHistoryMaster).append('g').attr('class', 'tts-icon-group').on('click', (event, d) => { speak(d.word); })
+                    .append('svg').attr('class', 'tts-icon').attr('width', 24).attr('height', 24).attr('viewBox', '0 0 16 16')
+                    .html(`<title>Read aloud</title><path d="M9 4a.5.5 0 0 0-.812-.39L5.825 5.5H3.5A.5.5 0 0 0 3 6v4a.5.5 0 0 0 .5.5h2.325l2.363 1.89A.5.5 0 0 0 9 12zM6.312 6.39 8 5.04v5.92L6.312 9.61A.5.5 0 0 0 6 9.5H4v-3h2a.5.5 0 0 0 .312-.11M12.025 8a4.5 4.5 0 0 1-1.318 3.182L10 10.475A3.5 3.5 0 0 0 11.025 8 3.5 3.5 0 0 0 10 5.525l.707-.707A4.5 4.5 0 0 1 12.025 8"/>`);
+                iconWrapper.filter(d => d.type === 'example').append('g').attr('class', 'copy-icon-group').on('click', (event, d) => { copyToClipboard(d.text); })
+                    .append('svg').attr('class', 'copy-icon').attr('width', 20).attr('height', 20).attr('viewBox', '0 0 16 16')
+                    .html(`<title>Copy example</title><path fill-rule="evenodd" d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1z"/>`);
+                return iconWrapper.transition().duration(600).delay(500).style('opacity', 1);
+            },
+            update => update,
+            exit => exit.transition().duration(400).style('opacity', 0).remove()
+        );
 
-    graphGroup.selectAll(".link").style("stroke", d => d.type === 'cross-cluster' ? 'var(--accent-orange)' : d.target.type === 'example' ? 'var(--primary-coral)' : 'var(--text-secondary)').style("stroke-width", d => d.type === 'cross-cluster' ? 2 : d.target.type === 'example' ? 1.5 : 1).style("stroke-dasharray", d => d.type === 'cross-cluster' ? "8,4" : "none").style("opacity", d => d.target.type === 'example' ? 0.8 : 0.6);
-    simulation.nodes(visibleNodes);
-    simulation.force("link").links(visibleLinks);
-    simulation.alpha(1).restart();
-    graphGroup.selectAll('.central-node').raise();
-    updateCentralNodeState();
-}
+        graphGroup.selectAll(".link")
+            .style("stroke", d => d.type === 'cross-cluster' ? 'var(--accent-orange)' : d.target.type === 'example' ? 'var(--primary-coral)' : 'var(--text-secondary)')
+            .style("stroke-width", d => d.type === 'cross-cluster' ? 2 : d.target.type === 'example' ? 1.5 : 1)
+            .style("stroke-dasharray", d => d.type === 'cross-cluster' ? "8,4" : "none")
+            .style("opacity", d => d.target.type === 'example' ? 0.8 : 0.6);
+            
+        simulation.nodes(visibleNodes);
+        simulation.force("link").links(visibleLinks);
+        simulation.alpha(1).restart();
+        graphGroup.selectAll('.central-node').raise();
+        updateCentralNodeState();
+    }
 
     function renderInitialPrompt() {
         simulation.stop();
@@ -541,11 +473,7 @@ const simulation = d3.forceSimulation()
         currentActiveCentral = null;
 
         graphClusters.set(HISTORY_CLUSTER_ID, {
-            nodes: [],
-            links: [],
-            center: { x: 0, y: 0 },
-            isHistory: true,
-            currentView: 'history'
+            nodes: [], links: [], center: { x: 0, y: 0 }, isHistory: true, currentView: 'history'
         });
 
         graphGroup.selectAll("*").remove();
@@ -559,33 +487,25 @@ const simulation = d3.forceSimulation()
     }
 
     // --- Event Handlers & Core Logic ---
-    
     function recalculateAllNodeDimensions() {
-    graphGroup.selectAll('.node:not(.central-node):not(.node-add)')
-        .each(function(d) {
+        graphGroup.selectAll('.node:not(.central-node):not(.node-add)').each(function(d) {
             const nodeElement = d3.select(this);
             const foreignObject = nodeElement.select('.node-html-wrapper');
             const div = nodeElement.select('.node-html-content');
 
             if (div.node() && foreignObject.node()) {
                 const isExample = d.type === 'example';
-                // Read the width from the element itself, which is set by CSS!
                 const textWidth = foreignObject.node().getBoundingClientRect().width / d3.zoomTransform(svg.node()).k;
                 const PADDING = isExample ? 0 : 12;
                 const circleRadius = isExample ? 0 : 18;
                 const textHeight = div.node().scrollHeight;
 
-                foreignObject
-                    .attr("height", textHeight)
-                    .attr("y", isExample ? -textHeight / 2 : -textHeight / 2)
-                    .attr("x", isExample ? -textWidth / 2 : circleRadius + PADDING); // Set x here
-
+                foreignObject.attr("height", textHeight).attr("y", isExample ? -textHeight / 2 : -textHeight / 2).attr("x", isExample ? -textWidth / 2 : circleRadius + PADDING); 
                 d.width = isExample ? textWidth : circleRadius * 2 + PADDING + textWidth;
                 d.height = Math.max(circleRadius * 2, textHeight);
             }
         });
-    console.log('Forced recalculation of all node dimensions based on CSS.');
-}
+    }
 
     function refetchCurrentView() {
         if (currentActiveCentral) {
@@ -604,15 +524,10 @@ const simulation = d3.forceSimulation()
     function handleRegisterToggle() {
         stopRegisterButtonAnimation();
         const registers = ['conversational', 'academic', 'business'];
-        const currentIndex = registers.indexOf(currentRegister);
-        const nextIndex = (currentIndex + 1) % registers.length;
-        currentRegister = registers[nextIndex];
+        currentRegister = registers[(registers.indexOf(currentRegister) + 1) % registers.length];
         registerToggleBtn.classList.remove('is-academic', 'is-business');
-        if (currentRegister === 'academic') {
-            registerToggleBtn.classList.add('is-academic');
-        } else if (currentRegister === 'business') {
-            registerToggleBtn.classList.add('is-business');
-        }
+        if (currentRegister === 'academic') registerToggleBtn.classList.add('is-academic');
+        else if (currentRegister === 'business') registerToggleBtn.classList.add('is-business');
         refetchCurrentView();
     }
 
@@ -631,77 +546,32 @@ const simulation = d3.forceSimulation()
     function handleMouseOver(event, d) {
         const selection = d3.select(event.currentTarget);
         if (d.type !== 'add') {
-            selection.transition()
-                .duration(200)
-                .ease(d3.easeCircleOut)
-                .attr("transform", `translate(${d.x},${d.y}) scale(1.1)`);
+            selection.transition().duration(200).ease(d3.easeCircleOut).attr("transform", `translate(${d.x},${d.y}) scale(1.1)`);
         }
 
-        if (d.isCentral && !d.isHistoryMaster) {
-            selection.select("circle")
-                .transition()
-                .duration(200)
-                .style("filter", "drop-shadow(0 0 20px var(--primary-coral))");
-        } else if (d.type !== 'example' && d.type !== 'add') {
-            selection.select("circle")
-                .transition()
-                .duration(200)
-                .style("stroke", "var(--primary-coral)")
-                .style("stroke-width", "2px");
-        }
+        if (d.isCentral && !d.isHistoryMaster) selection.select("circle").transition().duration(200).style("filter", "drop-shadow(0 0 20px var(--primary-coral))");
+        else if (d.type !== 'example' && d.type !== 'add') selection.select("circle").transition().duration(200).style("stroke", "var(--primary-coral)").style("stroke-width", "2px");
 
         let tooltipText = '';
-        if (d.isCentral && !d.isHistoryMaster) {
-            const cluster = graphClusters.get(d.clusterId);
-            tooltipText = cluster ? `Exploring: ${cluster.currentView} • Click to focus` : '';
-        } else if (d.isHistory) {
-             tooltipText = `Click to re-explore "${d.word}"`;
-        } else if (d.type === 'add') {
-            const is_disabled = d3.select(event.currentTarget).classed('is-disabled');
-            tooltipText = is_disabled ?
-                'No more items to load' :
-                `Load more ${graphClusters.get(d.clusterId)?.currentView || 'items'}`;
-        } else if (d.text && !d.isCentral && d.type !== 'example' && d.type !== 'add') {
-            tooltipText = `Click circle for an example\nClick text to explore`;
-        }
+        if (d.isCentral && !d.isHistoryMaster) tooltipText = `Exploring: ${graphClusters.get(d.clusterId)?.currentView || ''} • Click to focus`;
+        else if (d.isHistory) tooltipText = `Click to re-explore "${d.word}"`;
+        else if (d.type === 'add') tooltipText = d3.select(event.currentTarget).classed('is-disabled') ? 'No more items to load' : `Load more ${graphClusters.get(d.clusterId)?.currentView || 'items'}`;
+        else if (d.text && !d.isCentral && d.type !== 'example' && d.type !== 'add') tooltipText = `Click circle for an example\nClick text to explore`;
 
         if (tooltipText) {
-            tooltip.textContent = tooltipText;
-            tooltip.classList.add('visible');
-            tooltip.style.transform = 'translateY(-10px)';
+            tooltip.textContent = tooltipText; tooltip.classList.add('visible'); tooltip.style.transform = 'translateY(-10px)';
         }
-
-        svg.on('mousemove.tooltip', (e) => {
-            tooltip.style.left = `${e.pageX + 15}px`;
-            tooltip.style.top = `${e.pageY - 30}px`;
-        });
+        svg.on('mousemove.tooltip', (e) => { tooltip.style.left = `${e.pageX + 15}px`; tooltip.style.top = `${e.pageY - 30}px`; });
     }
 
     function handleMouseOut(event, d) {
         const selection = d3.select(event.currentTarget);
+        if (d.type !== 'add') selection.transition().duration(200).ease(d3.easeCircleOut).attr("transform", `translate(${d.x},${d.y}) scale(1)`);
+        
+        if (d.isCentral && !d.isHistoryMaster) selection.select("circle").transition().duration(200).style("filter", "drop-shadow(0 0 10px var(--primary-coral))");
+        else if (d.type !== 'example' && d.type !== 'add') selection.select("circle").transition().duration(200).style("stroke", "none");
 
-        if (d.type !== 'add') {
-            selection.transition()
-                .duration(200)
-                .ease(d3.easeCircleOut)
-                .attr("transform", `translate(${d.x},${d.y}) scale(1)`);
-        }
-
-        if (d.isCentral && !d.isHistoryMaster) {
-            selection.select("circle")
-                .transition()
-                .duration(200)
-                .style("filter", "drop-shadow(0 0 10px var(--primary-coral))");
-        } else if (d.type !== 'example' && d.type !== 'add') {
-            selection.select("circle")
-                .transition()
-                .duration(200)
-                .style("stroke", "none");
-        }
-
-        tooltip.classList.remove('visible');
-        tooltip.style.transform = 'translateY(0)';
-        svg.on('mousemove.tooltip', null);
+        tooltip.classList.remove('visible'); tooltip.style.transform = 'translateY(0)'; svg.on('mousemove.tooltip', null);
     }
 
     function handleNodeClick(event, d) {
@@ -709,27 +579,16 @@ const simulation = d3.forceSimulation()
         event.stopPropagation();
 
         const selection = d3.select(event.currentTarget);
-        selection.transition()
-            .duration(150)
-            .ease(d3.easeCircleOut)
-            .attr("transform", `translate(${d.x},${d.y}) scale(0.9)`)
-            .transition()
-            .duration(150)
-            .ease(d3.easeCircleOut)
-            .attr("transform", `translate(${d.x},${d.y}) scale(1)`);
+        selection.transition().duration(150).ease(d3.easeCircleOut).attr("transform", `translate(${d.x},${d.y}) scale(0.9)`)
+            .transition().duration(150).ease(d3.easeCircleOut).attr("transform", `translate(${d.x},${d.y}) scale(1)`);
 
         const exampleTypes = ['synonyms', 'opposites', 'derivatives', 'collocations', 'idioms', 'context', 'meaning', 'translation'];
         
-        if (d.isHistory) {
-            handleWordSubmitted(d.word, true);
-        } else if (exampleTypes.includes(d.type)) {
-            toggleExampleForNode(d);
-        } else if (d.isCentral && !d.isHistoryMaster) {
-            focusOnCentralNode(d.clusterId);
-        } else if (d.type === 'add') {
-            if (d3.select(event.currentTarget).classed('is-loading') || d3.select(event.currentTarget).classed('is-disabled')) {
-                return;
-            }
+        if (d.isHistory) handleWordSubmitted(d.word, true);
+        else if (exampleTypes.includes(d.type)) toggleExampleForNode(d);
+        else if (d.isCentral && !d.isHistoryMaster) focusOnCentralNode(d.clusterId);
+        else if (d.type === 'add') {
+            if (d3.select(event.currentTarget).classed('is-loading') || d3.select(event.currentTarget).classed('is-disabled')) return;
             fetchMoreNodes();
         }
     }
@@ -738,124 +597,82 @@ const simulation = d3.forceSimulation()
         const lowerWord = word.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()?]/g, "");
 
         if (isGameMode && isNewCentral) {
-            gameData.steps++;
-            updateGameUI();
-            if (lowerWord === gameData.targetWord) {
-                handleWin();
-                return;
-            }
+            gameData.steps++; updateGameUI();
+            if (lowerWord === gameData.targetWord) { handleWin(); return; }
         }
 
         if (isNewCentral) {
             if (centralNodes.some(c => c.word === lowerWord)) {
-                console.log(`Node "${lowerWord}" is already active. Focusing.`);
-                focusOnCentralNode(lowerWord);
-                return;
+                focusOnCentralNode(lowerWord); return;
             }
 
             const historyCluster = graphClusters.get(HISTORY_CLUSTER_ID);
             const nodeInHistory = historyCluster.nodes.find(n => n.word === lowerWord);
 
-            if (nodeInHistory) {
-                console.log(`Promoting "${lowerWord}" from history.`);
-                historyCluster.nodes = historyCluster.nodes.filter(n => n.word !== lowerWord);
-            }
+            if (nodeInHistory) historyCluster.nodes = historyCluster.nodes.filter(n => n.word !== lowerWord);
 
             if (centralNodes.length >= MAX_ACTIVE_CLUSTERS) {
                 const oldestNodeToArchive = centralNodes.shift();
                 if (oldestNodeToArchive) {
-                    console.log(`Max active clusters reached. Archiving "${oldestNodeToArchive.word}" to history.`);
                     graphClusters.delete(oldestNodeToArchive.word);
-                    
                     const historyNode = {
                         ...oldestNodeToArchive,
                         isCentral: false,
                         isHistory: true,
+                        type: 'history', // Clearer styling targeting
                         clusterId: HISTORY_CLUSTER_ID,
                         fx: null,
-                        fy: null
+                        fy: null,
+                        // Scatter coordinates to prevent exact physics overlap masking
+                        x: (oldestNodeToArchive.x || 0) + (Math.random() - 0.5) * 50,
+                        y: (oldestNodeToArchive.y || 0) + (Math.random() - 0.5) * 50
                     };
                     historyCluster.nodes.push(historyNode);
                 }
             }
 
-            const centralNodeData = {
-                word: lowerWord, id: `central-${lowerWord}`,
-                isCentral: true, type: 'central', clusterId: lowerWord,
-                visible: true
-            };
-
+            const centralNodeData = { word: lowerWord, id: `central-${lowerWord}`, isCentral: true, type: 'central', clusterId: lowerWord, visible: true };
             centralNodes.push(centralNodeData);
-            graphClusters.set(lowerWord, {
-                nodes: [centralNodeData],
-                links: [],
-                center: { x: 0, y: 0 },
-                currentView: 'meaning'
-            });
+            graphClusters.set(lowerWord, { nodes: [centralNodeData], links: [], center: { x: 0, y: 0 }, currentView: 'meaning' });
 
             const newestNode = repositionAllClusters();
-            if (newestNode) {
-                panToNode(newestNode, 1.1);
-            }
+            if (newestNode) panToNode(newestNode, 1.1);
         }
 
         currentActiveCentral = lowerWord;
         currentView = 'meaning';
         viewState = { offset: 0, hasMore: true };
         updateActiveButton();
-
+        
         await generateGraphForView(currentView);
     }
 
     function panToNode(target, scale = 1.2) {
-        const targetX = target.x ?? target.fx;
-        const targetY = target.y ?? target.fy;
-
-        if (typeof targetX !== 'number' || typeof targetY !== 'number') {
-            console.error("panToNode called with invalid target:", target);
-            return;
-        }
-
+        const targetX = target.x ?? target.fx, targetY = target.y ?? target.fy;
+        if (typeof targetX !== 'number' || typeof targetY !== 'number') return;
         const { width, height } = graphContainer.getBoundingClientRect();
-
-        const transform = d3.zoomIdentity
-            .translate(width / 2, height / 2)
-            .scale(scale)
-            .translate(-targetX, -targetY);
-
-        svg.transition()
-            .duration(1000)
-            .ease(d3.easeCubicInOut)
-            .call(zoomBehavior.transform, transform);
+        const transform = d3.zoomIdentity.translate(width / 2, height / 2).scale(scale).translate(-targetX, -targetY);
+        svg.transition().duration(1000).ease(d3.easeCubicInOut).call(zoomBehavior.transform, transform);
     }
 
     function renderLoading(message) {
         const center = getViewportCenter();
-        graphGroup.selectAll("*").remove();
-        iconGroup.selectAll("*").remove();
+        graphGroup.selectAll("*").remove(); iconGroup.selectAll("*").remove();
         const loadingGroup = graphGroup.append("g");
-        loadingGroup.append("circle").attr("class", "loading-spinner")
-            .attr("cx", center.x).attr("cy", center.y - 30)
-            .attr("r", 20).attr("fill", "none").attr("stroke", "var(--primary-coral)")
-            .attr("stroke-width", 3).attr("stroke-dasharray", "31.4, 31.4");
-        loadingGroup.append("text").attr("class", "status-text")
-            .attr("x", center.x).attr("y", center.y + 30).text(message);
+        loadingGroup.append("circle").attr("class", "loading-spinner").attr("cx", center.x).attr("cy", center.y - 30).attr("r", 20).attr("fill", "none").attr("stroke", "var(--primary-coral)").attr("stroke-width", 3).attr("stroke-dasharray", "31.4, 31.4");
+        loadingGroup.append("text").attr("class", "status-text").attr("x", center.x).attr("y", center.y + 30).text(message);
     }
 
     function renderError(message) {
         const center = getViewportCenter();
-        graphGroup.selectAll("*").remove();
-        iconGroup.selectAll("*").remove();
-        graphGroup.append("text").attr("class", "status-text error-text")
-            .attr("x", center.x).attr("y", center.y).text(message);
+        graphGroup.selectAll("*").remove(); iconGroup.selectAll("*").remove();
+        graphGroup.append("text").attr("class", "status-text error-text").attr("x", center.x).attr("y", center.y).text(message);
     }
 
     function getConsolidatedGraphData() {
-        let nodes = [];
-        let links = [];
+        let nodes = []; let links = [];
         for (const cluster of graphClusters.values()) {
-            nodes.push(...cluster.nodes);
-            links.push(...cluster.links);
+            nodes.push(...cluster.nodes); links.push(...cluster.links);
         }
         return { nodes, links: [...links, ...crossConnections] };
     }
@@ -865,7 +682,8 @@ const simulation = d3.forceSimulation()
         const allPeripheralNodes = [];
         graphClusters.forEach(cluster => {
             if (cluster.isHistory) return;
-            allPeripheralNodes.push(...cluster.nodes.filter(n => !n.isCentral && n.text));
+            // Only create physical links for visible items!
+            allPeripheralNodes.push(...cluster.nodes.filter(n => !n.isCentral && n.text && n.visible));
         });
         for (let i = 0; i < allPeripheralNodes.length; i++) {
             for (let j = i + 1; j < allPeripheralNodes.length; j++) {
@@ -880,7 +698,6 @@ const simulation = d3.forceSimulation()
     async function toggleExampleForNode(nodeData) {
         const cluster = graphClusters.get(nodeData.clusterId);
         if (!cluster) return;
-
         const existingExample = cluster.nodes.find(n => n.sourceNodeId === nodeData.id);
 
         if (existingExample) {
@@ -888,71 +705,31 @@ const simulation = d3.forceSimulation()
             cluster.links = cluster.links.filter(l => (l.target.id || l.target) !== existingExample.id);
             updateGraph();
         } else {
-            // --- START of MODIFICATIONS ---
-
             const nodeElement = graphGroup.selectAll('.node').filter(d => d.id === nodeData.id);
-
-            // 1. Prevent re-clicks if already loading
-            if (nodeElement.classed('is-loading-example')) {
-                console.log('Already fetching an example for this node.');
-                return;
-            }
-
-            // 2. Add loading state and play sound for immediate feedback
+            if (nodeElement.classed('is-loading-example')) return;
+            
             nodeElement.classed('is-loading-example', true);
             playClickSound();
 
             try {
-                // --- (This is your existing API call logic) ---
-                const requestBody = {
-                    type: 'generateExample',
-                    word: nodeData.text,
-                    register: currentRegister,
-                    proficiency: currentProficiency,
-                    ageGroup: currentAgeGroup,
-                    sourceNodeType: nodeData.type
-                };
-                if (nodeData.type === 'meaning' || nodeData.type === 'context' || nodeData.type === 'translation') {
-                    requestBody.centralWord = nodeData.clusterId;
-                }
+                const requestBody = { type: 'generateExample', word: nodeData.text, register: currentRegister, proficiency: currentProficiency, ageGroup: currentAgeGroup, sourceNodeType: nodeData.type };
+                if (nodeData.type === 'meaning' || nodeData.type === 'context' || nodeData.type === 'translation') requestBody.centralWord = nodeData.clusterId;
                 if (nodeData.type === 'meaning') requestBody.definition = nodeData.text;
                 if (nodeData.type === 'context') requestBody.context = nodeData.text;
-                if (nodeData.type === 'translation') {
-                    requestBody.translation = nodeData.text;
-                    requestBody.language = nodeData.lang;
-                }
+                if (nodeData.type === 'translation') { requestBody.translation = nodeData.text; requestBody.language = nodeData.lang; }
 
-                const response = await fetch('/.netlify/functions/wordsplainer', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(requestBody)
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ error: `HTTP ${response.status}` }));
-                    throw new Error(errorData.error || 'Server returned an error.');
-                }
+                const response = await fetch('/.netlify/functions/wordsplainer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) });
+                if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'Server returned an error.');
+                
                 const data = await response.json();
-                let exampleText = null;
-                if (data.english_example && data.translated_example) {
-                    exampleText = `${data.english_example}\n${data.translated_example}`;
-                } else if (data.example) {
-                    exampleText = data.example;
-                    if (data.explanation) exampleText += `\n\n(${data.explanation})`;
-                }
+                let exampleText = (data.english_example && data.translated_example) ? `${data.english_example}\n${data.translated_example}` : (data.example ? data.example + (data.explanation ? `\n\n(${data.explanation})` : '') : null);
 
                 if (exampleText) {
                     const exId = `${nodeData.id}-ex`;
-                    const exNode = {
-                        id: exId, text: exampleText, type: 'example',
-                        sourceNodeId: nodeData.id, clusterId: nodeData.clusterId, visible: true
-                    };
-                    cluster.nodes.push(exNode);
+                    cluster.nodes.push({ id: exId, text: exampleText, type: 'example', sourceNodeId: nodeData.id, clusterId: nodeData.clusterId, visible: true });
                     cluster.links.push({ source: nodeData.id, target: exId, type: 'example' });
                     updateGraph();
-                } else {
-                    throw new Error('No valid example received from server');
-                }
+                } else throw new Error('No valid example received from server');
             } catch (error) {
                 console.error("Error getting example:", error);
                 alert(`Sorry, we couldn't generate an example. Reason: ${error.message}`);
@@ -966,51 +743,44 @@ const simulation = d3.forceSimulation()
         if (!currentActiveCentral) return renderError('No word selected.');
         const cluster = graphClusters.get(currentActiveCentral);
         if (!cluster) return renderError('Invalid word cluster.');
+        
         const alreadyLoaded = cluster.nodes.some(n => n.type === view);
         cluster.currentView = view;
         currentView = view;
         updateActiveButton();
+
         if (alreadyLoaded) {
             console.log(`CACHE HIT for "${currentActiveCentral}" - view: ${view}`);
-            cluster.nodes.forEach(node => {
-                const isExample = node.type === 'example';
-                if (!isExample) {
-                    node.visible = node.isCentral || node.type === 'add' || node.type === view;
-                } else {
-                    const sourceNode = cluster.nodes.find(n => n.id === node.sourceNodeId);
-                    node.visible = sourceNode ? sourceNode.visible : false;
-                }
-            });
+            updateClusterVisibilities(); // Applies cross-cluster visibility state cleanly
             updateGraph();
             return;
         }
+
         console.log(`CACHE MISS for "${currentActiveCentral}" - view: ${view}. Fetching...`);
         renderLoading(`Loading ${view} for "${currentActiveCentral}"...`);
         try {
             const data = await fetchData(currentActiveCentral, view, 0, view === 'meaning' ? 1 : 5, options.language);
             if (!data || !data.nodes) throw new Error("No data received from server.");
-            data.nodes.forEach(nodeData => {
+            
+            data.nodes.forEach((nodeData, index) => {
                 if (!nodeData || typeof nodeData.text !== 'string') return;
-                const nodeId = `${currentActiveCentral}-${nodeData.text.slice(0, 10)}-${view}`;
-                if (cluster.nodes.some(n => n.id === nodeId)) return;
+                // De-duplicate locally using string equivalence
+                if (cluster.nodes.some(n => n.text && n.text.toLowerCase() === nodeData.text.toLowerCase())) return;
+
+                // Deterministic Unique ID using index to prevent D3 ID collision bugs
+                const nodeId = `${currentActiveCentral}-${view}-${index}`;
                 const newNode = { ...nodeData, id: nodeId, type: view, clusterId: currentActiveCentral, visible: true, lang: options.language };
                 cluster.nodes.push(newNode);
-                cluster.links.push({ source: `central-${currentActiveCentral}`, target: newNode.id });
+                cluster.links.push({ source: `central-${currentActiveCentral}`, target: nodeId });
             });
+
             if (!cluster.nodes.some(n => n.id === `add-${currentActiveCentral}`)) {
                 const addNode = { id: `add-${currentActiveCentral}`, type: 'add', clusterId: currentActiveCentral, visible: true };
                 cluster.nodes.push(addNode);
                 cluster.links.push({ source: `central-${currentActiveCentral}`, target: addNode.id });
             }
-            cluster.nodes.forEach(node => {
-                const isExample = node.type === 'example';
-                if (!isExample) {
-                    node.visible = node.isCentral || node.type === 'add' || node.type === currentView;
-                } else {
-                    const sourceNode = cluster.nodes.find(n => n.id === node.sourceNodeId);
-                    node.visible = sourceNode ? sourceNode.visible : false;
-                }
-            });
+
+            updateClusterVisibilities();
             detectCrossConnections();
             updateGraph();
         } catch (error) {
@@ -1020,87 +790,53 @@ const simulation = d3.forceSimulation()
     }
 
     function promptForInitialWord() {
-    const inputOverlay = document.getElementById('input-overlay');
-    const overlayInput = document.getElementById('overlay-input');
-    const voiceInputBtn = document.getElementById('voice-input-btn');
-
-    // --- A single function to process and validate any input ---
-    const processInput = (inputValue) => {
-        const value = inputValue.trim();
-        if (!value) return; // Ignore empty input
-
-        const words = value.split(/\s+/); // Split by spaces
-
-        if (words.length > 4) {
-            // --- Input is too long, show an error ---
-            const originalPlaceholder = overlayInput.placeholder;
-            overlayInput.value = ''; // Clear the invalid input
-            overlayInput.placeholder = "Too long! Please use 4 words max.";
-            overlayInput.classList.add('error');
-
-            // Revert the error message after a short delay
-            setTimeout(() => {
-                overlayInput.placeholder = originalPlaceholder;
-                overlayInput.classList.remove('error');
-            }, 2500);
-        } else {
-            // --- Input is valid, submit it ---
-            handleWordSubmitted(value, true);
-            closeOverlay();
-        }
-    };
-
-    overlayInput.placeholder = "Type a word or phrase...";
-    inputOverlay.classList.add('visible');
-    overlayInput.focus();
-    overlayInput.value = '';
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitRecognition;
-    let recognition;
-
-    if (SpeechRecognition) {
-        voiceInputBtn.style.display = 'flex';
-        recognition = new SpeechRecognition();
-        recognition.continuous = false;
-        recognition.lang = 'en-US';
-        recognition.interimResults = false;
-        recognition.maxAlternatives = 1;
-
-        voiceInputBtn.onclick = () => recognition.start();
-        voiceInputBtn.classList.remove('listening');
-        recognition.onstart = () => voiceInputBtn.classList.add('listening');
-        recognition.onend = () => voiceInputBtn.classList.remove('listening');
-
-        recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript.trim();
-            overlayInput.value = transcript; // Show user what was heard
-            processInput(transcript); // Validate the voice input
+        const inputOverlay = document.getElementById('input-overlay');
+        const overlayInput = document.getElementById('overlay-input');
+        const processInput = (inputValue) => {
+            const value = inputValue.trim();
+            if (!value) return;
+            if (value.split(/\s+/).length > 4) {
+                const originalPlaceholder = overlayInput.placeholder;
+                overlayInput.value = '';
+                overlayInput.placeholder = "Too long! Please use 4 words max.";
+                overlayInput.classList.add('error');
+                setTimeout(() => { overlayInput.placeholder = originalPlaceholder; overlayInput.classList.remove('error'); }, 2500);
+            } else {
+                handleWordSubmitted(value, true); closeOverlay();
+            }
         };
-        recognition.onerror = (event) => console.error("Speech recognition error:", event.error);
-    } else {
-        voiceInputBtn.style.display = 'none';
-        overlayInput.placeholder = "Type a word or phrase (max 4 words)...";
-    }
 
-    const closeOverlay = () => {
-        inputOverlay.classList.remove('visible');
-        overlayInput.removeEventListener('keydown', handleKeyDown);
-        overlayInput.removeEventListener('blur', handleBlur);
-        if (recognition) recognition.stop();
-    };
+        overlayInput.placeholder = "Type a word or phrase...";
+        inputOverlay.classList.add('visible'); overlayInput.focus(); overlayInput.value = '';
 
-    const handleKeyDown = (event) => {
-        if (event.key === "Enter") {
-            event.preventDefault();
-            processInput(overlayInput.value); // Validate keyboard input
+        const SpeechRecognition = window.SpeechRecognition || window.webkitRecognition;
+        let recognition;
+        if (SpeechRecognition) {
+            voiceInputBtn.style.display = 'flex';
+            recognition = new SpeechRecognition();
+            recognition.continuous = false; recognition.lang = 'en-US'; recognition.interimResults = false; recognition.maxAlternatives = 1;
+            voiceInputBtn.onclick = () => recognition.start();
+            voiceInputBtn.classList.remove('listening');
+            recognition.onstart = () => voiceInputBtn.classList.add('listening');
+            recognition.onend = () => voiceInputBtn.classList.remove('listening');
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript.trim();
+                overlayInput.value = transcript; processInput(transcript);
+            };
+        } else {
+            voiceInputBtn.style.display = 'none';
         }
-    };
 
-    const handleBlur = () => closeOverlay();
+        const closeOverlay = () => {
+            inputOverlay.classList.remove('visible');
+            overlayInput.removeEventListener('keydown', handleKeyDown); overlayInput.removeEventListener('blur', handleBlur);
+            if (recognition) recognition.stop();
+        };
 
-    overlayInput.addEventListener('keydown', handleKeyDown);
-    overlayInput.addEventListener('blur', handleBlur);
-}
+        const handleKeyDown = (event) => { if (event.key === "Enter") { event.preventDefault(); processInput(overlayInput.value); } };
+        const handleBlur = () => closeOverlay();
+        overlayInput.addEventListener('keydown', handleKeyDown); overlayInput.addEventListener('blur', handleBlur);
+    }
 
     function handleDockClick(event) {
         const button = event.target.closest('button');
@@ -1112,10 +848,7 @@ const simulation = d3.forceSimulation()
             generateGraphForView(dataType);
         } else {
             switch (button.id) {
-                case 'clear-btn':
-                    previousChallengeWords = [];
-                    renderInitialPrompt();
-                    break;
+                case 'clear-btn': previousChallengeWords = []; renderInitialPrompt(); break;
                 case 'save-btn': saveAsPng(); break;
                 case 'fullscreen-btn': toggleFullScreen(); break;
                 case 'theme-toggle-btn': toggleTheme(); break;
@@ -1142,92 +875,54 @@ const simulation = d3.forceSimulation()
                 updateActiveButton();
                 panToNode(cluster.center, 1.2);
             }
+            updateClusterVisibilities();
             updateCentralNodeState();
+            updateGraph();
             console.log(`Focused on central node: ${clusterId}`);
         }
     }
 
     function createInteractiveText(d3Element, text, onWordClick) {
-    const isSvg = d3Element.node().tagName.toLowerCase() === 'text';
-    d3Element.html("");
-    const lines = text.split('\n');
+        const isSvg = d3Element.node().tagName.toLowerCase() === 'text';
+        d3Element.html("");
+        text.split('\n').forEach((line, lineIndex) => {
+            if (lineIndex > 0 && !isSvg) d3Element.append("br");
+            const initialTokens = line.split(/(\s+)/);
+            const processedTokens = [];
 
-    lines.forEach((line, lineIndex) => {
-        if (lineIndex > 0 && !isSvg) d3Element.append("br");
+            const isVerb = (word, precedingWord) => {
+                const cleanedWord = word.trim().toLowerCase().replace(/[.,!?;:"/()\[\]]+/g, '');
+                if (commonVerbs.has(cleanedWord)) return true;
+                if (precedingWord && precedingWord.trim().toLowerCase() === 'to') return true;
+                return false;
+            };
 
-        const initialTokens = line.split(/(\s+)/); // Split and keep spaces
-        const processedTokens = [];
+            for (let i = 0; i < initialTokens.length; i++) {
+                const currentToken = initialTokens[i];
+                if (i % 2 === 1) { processedTokens.push(currentToken); continue; }
+                const nextToken = (i + 2 < initialTokens.length) ? initialTokens[i + 2] : null;
+                const cleanedNext = nextToken ? nextToken.trim().toLowerCase().replace(/[.,!?;:"/()\[\]]+/g, '') : null;
+                const previousToken = (i > 1) ? initialTokens[i - 2] : null;
 
-        // New, smarter helper function to check if a word is likely a verb
-        const isVerb = (word, precedingWord) => {
-            const cleanedWord = word.trim().toLowerCase().replace(/[.,!?;:"/()\[\]]+/g, '');
-            if (commonVerbs.has(cleanedWord)) {
-                return true;
+                if (nextToken && phrasalVerbParticles.has(cleanedNext) && isVerb(currentToken, previousToken)) {
+                    processedTokens.push(currentToken + initialTokens[i + 1] + nextToken); i += 2;
+                } else processedTokens.push(currentToken);
             }
-            const cleanedPreceding = precedingWord ? precedingWord.trim().toLowerCase() : '';
-            if (cleanedPreceding === 'to') {
-                return true; // Catches infinitive forms like "to invite"
-            }
-            return false;
-        };
 
-        for (let i = 0; i < initialTokens.length; i++) {
-            const currentToken = initialTokens[i];
-
-            // Don't process spaces
-            if (i % 2 === 1) {
-                processedTokens.push(currentToken);
-                continue;
-            }
-            
-            // Look ahead to the next word (token after the next space)
-            const nextToken = (i + 2 < initialTokens.length) ? initialTokens[i + 2] : null;
-            const cleanedNext = nextToken ? nextToken.trim().toLowerCase().replace(/[.,!?;:"/()\[\]]+/g, '') : null;
-            
-            // Check the previous token to help identify infinitives
-            const previousToken = (i > 1) ? initialTokens[i - 2] : null;
-
-            // The core logic change: Only combine if the current word is a verb AND the next is a particle
-            if (nextToken && phrasalVerbParticles.has(cleanedNext) && isVerb(currentToken, previousToken)) {
-                // It's a phrasal verb, so combine them
-                const combined = currentToken + initialTokens[i + 1] + nextToken;
-                processedTokens.push(combined);
-                i += 2; // Crucially, skip the next space and particle we just processed
-            } else {
-                processedTokens.push(currentToken);
-            }
-        }
-
-        const lineContainer = isSvg ? d3Element.append('tspan').attr('x', 0).attr('dy', lineIndex === 0 ? '0.3em' : '1.4em') : d3Element;
-
-        processedTokens.forEach(token => {
-            // This part remains the same, but now operates on smarter tokens
-            if (token.trim() === '') {
-                lineContainer.append('span').text(token);
-                return;
-            }
-            
-            const isCombinedPhrase = token.includes(' ');
-            const cleanedToken = token.trim().toLowerCase().replace(/[.,!?;:"/()\[\]]+/g, '');
-            
-            // Make the token clickable if it's long enough or a combined phrasal verb
-            if (cleanedToken.length > 1 || isCombinedPhrase) {
-                lineContainer.append('span')
-                    .attr('class', 'interactive-word')
-                    .text(token)
-                    .on('click', (event) => { event.stopPropagation(); onWordClick(token); });
-            } else {
-                lineContainer.append('span').text(token);
-            }
+            const lineContainer = isSvg ? d3Element.append('tspan').attr('x', 0).attr('dy', lineIndex === 0 ? '0.3em' : '1.4em') : d3Element;
+            processedTokens.forEach(token => {
+                if (token.trim() === '') { lineContainer.append('span').text(token); return; }
+                const isCombinedPhrase = token.includes(' ');
+                const cleanedToken = token.trim().toLowerCase().replace(/[.,!?;:"/()\[\]]+/g, '');
+                if (cleanedToken.length > 1 || isCombinedPhrase) lineContainer.append('span').attr('class', 'interactive-word').text(token).on('click', (event) => { event.stopPropagation(); onWordClick(token); });
+                else lineContainer.append('span').text(token);
+            });
         });
-    });
-}
+    }
 
     const CLUSTER_SPACING = 700;
     function repositionAllClusters() {
-        if (centralNodes.length === 0 && graphClusters.get(HISTORY_CLUSTER_ID).nodes.length <= 1) {
-            return null;
-        }
+        if (centralNodes.length === 0 && graphClusters.get(HISTORY_CLUSTER_ID).nodes.length <= 1) return null;
 
         const { width, height } = graphContainer.getBoundingClientRect();
         const currentTransform = d3.zoomTransform(svg.node());
@@ -1241,42 +936,23 @@ const simulation = d3.forceSimulation()
                 const offset = i - lastNodeIndex;
                 const targetX = viewCenterX + (offset * CLUSTER_SPACING);
                 const targetY = viewCenterY;
-                node.fx = targetX;
-                node.fy = targetY;
-                cluster.center.x = targetX;
-                cluster.center.y = targetY;
+                node.fx = targetX; node.fy = targetY;
+                cluster.center.x = targetX; cluster.center.y = targetY;
             }
         });
 
         const historyCluster = graphClusters.get(HISTORY_CLUSTER_ID);
         if (historyCluster) {
-            let historyX;
-            if (centralNodes.length > 0) {
-                const oldestNodeOffset = 0 - lastNodeIndex;
-                historyX = viewCenterX + (oldestNodeOffset - 1) * CLUSTER_SPACING;
-            } else {
-                historyX = viewCenterX;
-            }
-            
-            historyCluster.center.x = historyX;
-            historyCluster.center.y = viewCenterY;
+            let historyX = centralNodes.length > 0 ? viewCenterX + (0 - lastNodeIndex - 1) * CLUSTER_SPACING : viewCenterX;
+            historyCluster.center.x = historyX; historyCluster.center.y = viewCenterY;
 
             let master = historyCluster.nodes.find(n => n.isHistoryMaster);
             if (!master) {
-                master = {
-                    id: HISTORY_CLUSTER_ID, word: 'History', isHistoryMaster: true,
-                    isCentral: true, clusterId: HISTORY_CLUSTER_ID, fx: historyX, fy: viewCenterY,
-                    visible: true, type: 'history_master'
-                };
+                master = { id: HISTORY_CLUSTER_ID, word: 'History', isHistoryMaster: true, isCentral: true, clusterId: HISTORY_CLUSTER_ID, fx: historyX, fy: viewCenterY, visible: true, type: 'history_master' };
                 historyCluster.nodes.unshift(master);
-            } else {
-                master.fx = historyX;
-                master.fy = viewCenterY;
-            }
+            } else { master.fx = historyX; master.fy = viewCenterY; }
 
-            historyCluster.links = historyCluster.nodes
-                .filter(n => !n.isHistoryMaster)
-                .map(n => ({ source: HISTORY_CLUSTER_ID, target: n.id, type: 'history_link' }));
+            historyCluster.links = historyCluster.nodes.filter(n => !n.isHistoryMaster).map(n => ({ source: HISTORY_CLUSTER_ID, target: n.id, type: 'history_link' }));
         }
 
         simulation.alpha(0.6).restart();
@@ -1284,35 +960,17 @@ const simulation = d3.forceSimulation()
     }
 
     const handleResize = debounce(function() {
-        console.log('Handling resize...');
         const { width, height } = graphContainer.getBoundingClientRect();
         const isMobile = width < 480;
 
-        // 1. Update SVG dimensions
         svg.attr("width", width).attr("height", height);
-
-        // 2. Update the simulation's forces
         radialForce.x(width / 2).y(height / 2);
-
-        // Update link distance
-        simulation.force("link").distance(d => {
-            return isMobile ? (d.target.type === 'example' ? 70 : 100) : (d.target.type === 'example' ? 100 : 150);
-        });
-
-        // Update charge strength
-        simulation.force("charge").strength(d => {
-            return d.isCentral ? (isMobile ? -1000 : -1500) : (isMobile ? -250 : -400);
-        }).distanceMax(isMobile ? 300 : 500);
+        simulation.force("link").distance(d => isMobile ? (d.target.type === 'example' ? 70 : 100) : (d.target.type === 'example' ? 100 : 150));
+        simulation.force("charge").strength(d => d.isCentral ? (isMobile ? -1000 : -1500) : (isMobile ? -250 : -400)).distanceMax(isMobile ? 300 : 500);
         
-        // 3. Recalculate node dimensions as they are dependent on CSS media queries
         recalculateAllNodeDimensions(); 
-        
-        // 4. Reposition clusters to fit the new viewport
         repositionAllClusters();
-
-        // 5. Give the simulation a "nudge" to adapt to the new layout
         simulation.alpha(0.3).restart();
-
     }, 250); 
 
     async function fetchMoreNodes() {
@@ -1321,15 +979,16 @@ const simulation = d3.forceSimulation()
         const addNodeElement = graphGroup.selectAll('.node-add').filter(node_d => node_d.clusterId === currentActiveCentral);
         if (addNodeElement.classed('is-loading')) return;
         addNodeElement.classed('is-loading', true);
+        
         try {
             const data = await fetchData(currentActiveCentral, cluster.currentView, viewState.offset, 3);
             if (data.nodes.length > 0) {
                 let addedNodeCount = 0;
-                data.nodes.forEach(newNodeData => {
+                data.nodes.forEach((newNodeData, index) => {
                     if (!newNodeData || typeof newNodeData.text !== 'string') return;
                     const isDuplicate = cluster.nodes.some(existingNode => existingNode.text && existingNode.text.toLowerCase() === newNodeData.text.toLowerCase());
                     if (!isDuplicate) {
-                        const newNodeId = `${currentActiveCentral}-${newNodeData.text.slice(0, 10)}-${cluster.currentView}`;
+                        const newNodeId = `${currentActiveCentral}-${cluster.currentView}-${viewState.offset + index}`;
                         const newNode = { ...newNodeData, id: newNodeId, type: cluster.currentView, clusterId: currentActiveCentral, visible: true };
                         cluster.nodes.push(newNode);
                         cluster.links.push({ source: `central-${currentActiveCentral}`, target: newNodeId });
@@ -1337,6 +996,7 @@ const simulation = d3.forceSimulation()
                     }
                 });
                 if (addedNodeCount > 0) {
+                    updateClusterVisibilities();
                     detectCrossConnections();
                     updateGraph();
                 }
@@ -1347,9 +1007,7 @@ const simulation = d3.forceSimulation()
             }
         } catch (error) {
             console.error("Failed to fetch more nodes:", error);
-            tooltip.textContent = "Error loading.";
-            tooltip.classList.add('visible');
-            setTimeout(() => tooltip.classList.remove('visible'), 2000);
+            tooltip.textContent = "Error loading."; tooltip.classList.add('visible'); setTimeout(() => tooltip.classList.remove('visible'), 2000);
         } finally {
             addNodeElement.classed('is-loading', false);
             if (!viewState.hasMore) addNodeElement.classed('is-disabled', true);
@@ -1361,75 +1019,39 @@ const simulation = d3.forceSimulation()
         if (!currentActiveCentral) return;
         const centralNodeElement = graphGroup.selectAll('.central-node').filter(d => d.clusterId === currentActiveCentral);
         if (centralNodeElement.empty()) return;
-        const isPaginatedView = currentView !== 'meaning';
-        centralNodeElement.classed('loadable', isPaginatedView && viewState.hasMore);
+        centralNodeElement.classed('loadable', currentView !== 'meaning' && viewState.hasMore);
     }
 
     function updateActiveButton() {
-        document.querySelectorAll('.category-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.type === currentView);
-        });
+        document.querySelectorAll('.category-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.type === currentView));
     }
 
     async function startGame() {
         renderLoading("Generating your challenge...");
         try {
-            const response = await fetch('/.netlify/functions/wordsplainer', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    type: 'generateWordLadderChallenge',
-                    previousWords: previousChallengeWords
-                })
-            });
+            const response = await fetch('/.netlify/functions/wordsplainer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'generateWordLadderChallenge', previousWords: previousChallengeWords }) });
             if (!response.ok) throw new Error("Could not generate a challenge.");
-
             const challenge = await response.json();
             previousChallengeWords.push(challenge.startWord.toLowerCase(), challenge.endWord.toLowerCase());
-
-            isGameMode = true;
-            gameData.startWord = challenge.startWord.toLowerCase();
-            gameData.targetWord = challenge.endWord.toLowerCase();
-            gameData.steps = 0;
-
+            isGameMode = true; gameData.startWord = challenge.startWord.toLowerCase(); gameData.targetWord = challenge.endWord.toLowerCase(); gameData.steps = 0;
             renderInitialPrompt();
-
             await handleWordSubmitted(gameData.startWord, true);
-
             updateGameUI();
             gameStatusUI.classList.add('visible');
-
         } catch (error) {
             renderError("Failed to start game. Please try again.");
             console.error("Error starting game:", error);
         }
     }
 
-    function updateGameUI() {
-        startWordEl.textContent = gameData.startWord;
-        targetWordEl.textContent = gameData.targetWord;
-        stepCountEl.textContent = gameData.steps;
-    }
-
-    function endGame() {
-        isGameMode = false;
-        gameStatusUI.classList.remove('visible');
-    }
+    function updateGameUI() { startWordEl.textContent = gameData.startWord; targetWordEl.textContent = gameData.targetWord; stepCountEl.textContent = gameData.steps; }
+    function endGame() { isGameMode = false; gameStatusUI.classList.remove('visible'); }
 
     function handleWin() {
         gameOverMessage.textContent = `You reached "${gameData.targetWord}" in ${gameData.steps} steps!`;
         gameOverModal.classList.add('visible');
-
-        const myConfetti = confetti.create(confettiCanvas, {
-            resize: true,
-            useWorker: true
-        });
-        myConfetti({
-            particleCount: 150,
-            spread: 160,
-            origin: { y: 0.6 }
-        });
-
+        const myConfetti = confetti.create(confettiCanvas, { resize: true, useWorker: true });
+        myConfetti({ particleCount: 150, spread: 160, origin: { y: 0.6 } });
         endGame();
     }
 
@@ -1442,111 +1064,68 @@ const simulation = d3.forceSimulation()
             const centralNode = centralNodes.find(n => n.clusterId === currentActiveCentral);
             if (centralNode) {
                 const center = getViewportCenter();
-                centralNode.fx = center.x;
-                centralNode.fy = center.y;
-                radialForce.x(center.x).y(center.y);
+                centralNode.fx = center.x; centralNode.fy = center.y; radialForce.x(center.x).y(center.y);
             }
             simulation.force("radial", radialForce);
         } else {
             const centralNode = centralNodes.find(n => n.clusterId === currentActiveCentral);
-            if (centralNode) {
-                centralNode.fx = null;
-                centralNode.fy = null;
-            }
+            if (centralNode) { centralNode.fx = null; centralNode.fy = null; }
             simulation.force("radial", null);
         }
         simulation.alpha(1).restart();
     }
 
-    function toggleTheme() {
-        const newTheme = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-        applyTheme(newTheme);
-    }
-
-    function toggleFullScreen() {
-        if (!document.fullscreenElement) document.getElementById('app-wrapper').requestFullscreen().catch(err => alert(`Error: ${err.message}`));
-        else document.exitFullscreen();
-    }
+    function toggleTheme() { applyTheme(document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light'); }
+    function toggleFullScreen() { if (!document.fullscreenElement) document.getElementById('app-wrapper').requestFullscreen().catch(err => alert(`Error: ${err.message}`)); else document.exitFullscreen(); }
 
     function saveAsPng() {
-        if (centralNodes.length === 0) {
-            alert("Nothing to save yet!");
-            return;
-        }
+        if (centralNodes.length === 0) return alert("Nothing to save yet!");
         const allNodes = getConsolidatedGraphData().nodes;
         if (allNodes.length === 0) return;
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
         allNodes.forEach(d => {
-            const nodeWidth = d.width || (d.isCentral ? 90 : 40);
-            const nodeHeight = d.height || (d.isCentral ? 90 : 40);
-            minX = Math.min(minX, d.x - nodeWidth / 2);
-            maxX = Math.max(maxX, d.x + nodeWidth / 2);
-            minY = Math.min(minY, d.y - nodeHeight / 2);
-            maxY = Math.max(maxY, d.y + nodeHeight / 2);
+            const nodeWidth = d.width || (d.isCentral ? 90 : 40), nodeHeight = d.height || (d.isCentral ? 90 : 40);
+            minX = Math.min(minX, d.x - nodeWidth / 2); maxX = Math.max(maxX, d.x + nodeWidth / 2);
+            minY = Math.min(minY, d.y - nodeHeight / 2); maxY = Math.max(maxY, d.y + nodeHeight / 2);
         });
-        const padding = 100;
-        const exportWidth = (maxX - minX) + 2 * padding;
-        const exportHeight = (maxY - minY) + 2 * padding;
+        const padding = 100, exportWidth = (maxX - minX) + 2 * padding, exportHeight = (maxY - minY) + 2 * padding;
         const tempSvg = d3.create('svg').attr('xmlns', 'http://www.w3.org/2000/svg').attr('width', exportWidth).attr('height', exportHeight).attr('viewBox', `0 0 ${exportWidth} ${exportHeight}`);
-        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-        tempSvg.attr('data-theme', currentTheme);
-        const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--canvas-bg').trim();
-        tempSvg.append('rect').attr('width', '100%').attr('height', '100%').attr('fill', bgColor);
-        const creditTextColor = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim();
-        tempSvg.append('text').attr('x', exportWidth / 2).attr('y', exportHeight - 20).attr('text-anchor', 'middle').attr('font-family', 'Inter, sans-serif').attr('font-size', '14px').attr('fill', creditTextColor).text('Wordsplainer, www.eltcation.com');
+        tempSvg.attr('data-theme', document.documentElement.getAttribute('data-theme') || 'light');
+        tempSvg.append('rect').attr('width', '100%').attr('height', '100%').attr('fill', getComputedStyle(document.documentElement).getPropertyValue('--canvas-bg').trim());
+        tempSvg.append('text').attr('x', exportWidth / 2).attr('y', exportHeight - 20).attr('text-anchor', 'middle').attr('font-family', 'Inter, sans-serif').attr('font-size', '14px').attr('fill', getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim()).text('Wordsplainer, www.eltcation.com');
         const tempGroup = tempSvg.append('g').attr('transform', `translate(${-minX + padding}, ${-minY + padding})`);
         const style = tempSvg.append('style');
         let cssText = "";
-        for (const sheet of document.styleSheets) {
-            try { if (sheet.cssRules) for (const rule of sheet.cssRules) cssText += rule.cssText + '\n'; } catch (e) { console.warn("Cannot read CSS rules from stylesheet: " + e); }
-        }
+        for (const sheet of document.styleSheets) { try { if (sheet.cssRules) for (const rule of sheet.cssRules) cssText += rule.cssText + '\n'; } catch (e) { console.warn("Cannot read CSS rules: " + e); } }
         style.text(cssText);
         graphGroup.selectAll('.link').each(function() { tempGroup.node().appendChild(this.cloneNode(true)); });
         graphGroup.selectAll('.node').each(function() { tempGroup.node().appendChild(this.cloneNode(true)); });
-        const svgString = new XMLSerializer().serializeToString(tempSvg.node());
-        const svgDataUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
-        const image = new Image();
-        image.src = svgDataUrl;
+        const image = new Image(); image.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(new XMLSerializer().serializeToString(tempSvg.node()))));
         image.onload = () => {
-            const canvas = document.createElement('canvas');
-            canvas.width = exportWidth;
-            canvas.height = exportHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(image, 0, 0);
-            const a = document.createElement('a');
-            a.href = canvas.toDataURL('image/png', 1.0);
-            a.download = `Wordsplainer-infographic.png`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            const canvas = document.createElement('canvas'); canvas.width = exportWidth; canvas.height = exportHeight;
+            canvas.getContext('2d').drawImage(image, 0, 0);
+            const a = document.createElement('a'); a.href = canvas.toDataURL('image/png', 1.0); a.download = `Wordsplainer-infographic.png`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
         };
-        image.onerror = (e) => { console.error('Failed to load SVG into image:', e); alert('An error occurred while creating the image. Please check the console.'); };
+        image.onerror = (e) => { console.error('Failed to load SVG into image:', e); alert('An error occurred while creating the image.'); };
     }
 
     function dragstarted(event, d) {
         if (!event.active) simulation.alphaTarget(0.3).restart();
-        d.fx = d.isCentral ? d.fx : d.x;
-        d.fy = d.isCentral ? d.fy : d.y;
+        d.fx = d.isCentral ? d.fx : d.x; d.fy = d.isCentral ? d.fy : d.y;
     }
 
     function dragged(event, d) {
-        d.fx = event.x;
-        d.fy = event.y;
+        d.fx = event.x; d.fy = event.y;
         if (d.isCentral) {
             const cluster = graphClusters.get(d.clusterId);
-            if (cluster) {
-                cluster.center.x = d.fx;
-                cluster.center.y = d.fy;
-            }
+            if (cluster) { cluster.center.x = d.fx; cluster.center.y = d.fy; }
         }
     }
 
     function dragended(event, d) {
         if (!event.active) simulation.alphaTarget(0);
-        if (!d.isCentral) {
-            d.fx = null;
-            d.fy = null;
-        }
+        if (!d.isCentral) { d.fx = null; d.fy = null; }
     }
 
     // --- Initialization ---
@@ -1561,24 +1140,14 @@ const simulation = d3.forceSimulation()
     playGameBtn.addEventListener('click', startGame);
     onboardingHelpBtn.addEventListener('click', showHelpTour);
     endGameBtn.addEventListener('click', endGame);
-    playAgainBtn.addEventListener('click', () => {
-        gameOverModal.classList.remove('visible');
-        startGame();
-    });
-    gameOverModal.addEventListener('click', (event) => {
-        if (event.target === gameOverModal) {
-            gameOverModal.classList.remove('visible');
-        }
-    });
+    playAgainBtn.addEventListener('click', () => { gameOverModal.classList.remove('visible'); startGame(); });
+    gameOverModal.addEventListener('click', (event) => { if (event.target === gameOverModal) gameOverModal.classList.remove('visible'); });
     window.addEventListener('resize', handleResize);
     document.addEventListener('keydown', (event) => { if (event.key === "Escape") languageModal.classList.remove('visible'); });
     modalCloseBtn.addEventListener('click', () => languageModal.classList.remove('visible'));
     languageModal.addEventListener('click', (event) => { if (event.target === languageModal) languageModal.classList.remove('visible'); });
     languageList.addEventListener('click', (event) => {
-        if (event.target.tagName === 'LI') {
-            const selectedLang = event.target.dataset.lang;
-            languageModal.classList.remove('visible');
-            generateGraphForView('translation', { language: selectedLang });
-        }
+        if (event.target.tagName === 'LI') { languageModal.classList.remove('visible'); generateGraphForView('translation', { language: event.target.dataset.lang }); }
     });
 });
+--- END OF FILE script.js ---
