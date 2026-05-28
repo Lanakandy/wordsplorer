@@ -1,5 +1,3 @@
---- START OF FILE script.js ---
-
 function applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
@@ -1150,4 +1148,3 @@ document.addEventListener('DOMContentLoaded', () => {
         if (event.target.tagName === 'LI') { languageModal.classList.remove('visible'); generateGraphForView('translation', { language: event.target.dataset.lang }); }
     });
 });
---- END OF FILE script.js ---
