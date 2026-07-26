@@ -1112,22 +1112,38 @@ header h1 {
 
     /* --- THE MOBILE DOCK FIX: HORIZONTAL SCROLLING --- */
     #controls-dock {
-        /* 1. Revert to a single row and enable horizontal scrolling */
         flex-direction: row;
-        flex-wrap: nowrap; /* CRITICAL: Prevent wrapping */
-        overflow-x: auto;  /* CRITICAL: Enable horizontal scroll */
-        
-        /* 2. Improve the visual alignment and padding */
-        justify-content: flex-start; /* Align buttons to the start */
+        flex-wrap: nowrap; 
+        overflow-x: auto;  
+        justify-content: flex-start; 
         padding: 15px;
-
-        /* 3. Improve the scrolling experience (optional but recommended) */
-        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-        scroll-snap-type: x mandatory; /* Makes scrolling "snap" to buttons */
+        gap: 12px; /* NEW: Restores the breathing room between Category, Play, and Utility groups! */
+        -webkit-overflow-scrolling: touch; 
+        scroll-snap-type: x mandatory; 
+        -ms-overflow-style: none;  
+        scrollbar-width: none;  
     }
 
-    /* 4. Ensure button groups don't shrink */
-    .category-buttons, .utility-buttons {
+    .category-btn {
+        flex: 0 0 auto; /* Stop shrinking */
+        min-width: max-content; /* Fit the text perfectly */
+        padding: 10px 15px; /* Give back the breathing room */
+    }
+    
+    .utility-btn {
+        flex: 0 0 auto;
+        width: auto; /* Remove the strict 58px width limit */
+        min-width: 60px; /* Keep them square-ish if the word is short */
+        padding: 5px 12px; 
+    }
+
+    /* Prevent words like 'COMBINATIONS' or 'Full Screen' from breaking into two lines */
+    .category-btn span, 
+    .utility-btn span {
+        white-space: nowrap; 
+    }
+
+   .category-buttons, .utility-buttons {
         flex-shrink: 0;
     }
 
