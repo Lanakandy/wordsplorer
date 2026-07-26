@@ -1058,16 +1058,16 @@ header h1 {
         scrollbar-width: none;  /* Firefox */
     }
 
-#canvas-controls #mobile-settings-toggle {
-    display: none;
-    z-index: 100;
+#mobile-settings-toggle {
+    display: none !important;
 }
 
 @media (max-width: 768px) {
     /* 2. Show on mobile */
-    #canvas-controls #mobile-settings-toggle {
-        display: flex; 
+    #mobile-settings-toggle {
+        display: flex !important; 
         margin-bottom: 5px;
+        z-index: 100;
     }
     
     #canvas-controls {
