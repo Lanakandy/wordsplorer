@@ -470,7 +470,6 @@ const utilityButtons = document.querySelector('.utility-buttons');
                     // Assign physics dimensions so they don't visually overlap and clump together
                     d.width = 60; 
                     d.height = 60;
-                }
                 } else {
                     selection.style("opacity", 1);
                     const isExample = d.type === 'example';
