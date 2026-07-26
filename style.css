@@ -165,35 +165,59 @@ header h1 {
     box-shadow: 0 10px 40px var(--dock-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.2);
     position: relative; overflow: hidden;
 }
-.category-buttons, .utility-buttons { display: flex; gap: 12px; }
-.category-btn {
-    background: var(--btn-bg); border: 1px solid var(--btn-border); color: var(--dock-text-color);
-    border-radius: 16px; padding: 12px 8px; cursor: pointer;
+
+.category-buttons { 
+    display: flex; 
+    gap: 12px; 
+    padding-right: 20px; /* Adds space before the line */
+    border-right: 2px solid var(--btn-border); /* The elegant divider line */
+}
+
+.utility-buttons { 
+    display: flex; 
+    gap: 10px; 
+    padding-left: 10px; /* Adds space after the line */
+}
+
+/* --- SMALLER, CLEANER UTILITY BUTTONS --- */
+.utility-btn {
+    background: var(--btn-bg); 
+    border: 1px solid var(--btn-border);
+    border-radius: 14px; 
+    cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex; flex-direction: column; align-items: center; gap: 8px;
-    min-width: 100px; position: relative; overflow: hidden;
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center;
+    gap: 4px; /* Tighter gap */
+    width: 65px; /* SHRUNK from 80px */
+    height: 65px; /* SHRUNK from 80px */
+    color: var(--dock-text-color);
+    position: relative; 
+    overflow: hidden;
 }
-.category-btn:hover {
-    background: var(--btn-hover); transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 8px 25px rgba(255, 107, 71, 0.3); border-color: var(--primary-coral);
+
+.utility-btn:hover {
+    background: var(--btn-hover); 
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 6px 20px rgba(255, 107, 71, 0.25); 
+    border-color: var(--primary-coral);
 }
-.category-btn.active {
-    background: var(--btn-active); color: var(--text-light); font-weight: 600;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 30px rgba(255, 107, 71, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+
+.utility-btn svg { 
+    width: 22px; /* Shrunk icon slightly */
+    height: 22px; 
+    fill: currentColor; 
+    transition: all 0.3s ease; 
 }
-.color-dot-container {
-    width: 45px; height: 45px; background: rgba(255, 255, 255, 0.15);
-    border-radius: 12px; display: flex; justify-content: center; align-items: center;
-    transition: all 0.3s ease;
+
+.utility-btn span { 
+    font-size: 0.65rem; 
+    font-weight: 600; 
+    letter-spacing: 0.3px; 
 }
-.category-btn:hover .color-dot-container { transform: scale(1.1); }
-.color-dot {
-    width: 28px; height: 28px; border-radius: 50%;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); transition: all 0.3s ease;
-}
-.category-btn:hover .color-dot { transform: scale(1.1); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
-.category-btn span { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
 
 /* ===== START OF ENHANCED D3 STYLES SECTION ===== */
 
@@ -1117,6 +1141,14 @@ div#canvas-controls button#mobile-settings-toggle {
     #canvas-controls.expanded .age-text {
         opacity: 1 !important;
     }
+
+@media (max-width: 768px) {
+    .category-buttons {
+        padding-right: 0;
+        border-right: none;
+    }
+    .utility-buttons {
+        padding-left: 0;
 }
 
 /* --- History Button Archive Pulse --- */
