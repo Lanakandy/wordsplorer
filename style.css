@@ -1057,4 +1057,63 @@ header h1 {
         -ms-overflow-style: none;  /* IE and Edge */
         scrollbar-width: none;  /* Firefox */
     }
+
+#mobile-settings-toggle {
+    display: none;
+    z-index: 100;
+}
+
+@media (max-width: 768px) {
+    #mobile-settings-toggle {
+        display: flex; 
+        margin-bottom: 5px;
+    }
+    
+    #canvas-controls {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* Hide all control buttons (except the new toggle) initially */
+    #canvas-controls:not(.expanded) > *:not(#mobile-settings-toggle) {
+        display: none !important;
+    }
+    
+    /* When user taps the cog icon, format it as a frosted drop-down box */
+    #canvas-controls.expanded {
+        background: var(--dock-bg);
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--btn-border);
+        border-radius: 12px;
+        padding: 10px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+    
+    #canvas-controls.expanded .control-btn,
+    #canvas-controls.expanded #zoom-controls,
+    #canvas-controls.expanded #onboarding-help-btn {
+        margin-top: 10px;
+        width: 45px; /* Unified wider tap targets */
+    }
+
+    #canvas-controls.expanded #register-toggle-btn,
+    #canvas-controls.expanded #proficiency-toggle-btn,
+    #canvas-controls.expanded #age-toggle-btn {
+        width: 145px; /* Allow them to show their text permanently on mobile menu */
+    }
+
+    #canvas-controls.expanded .register-icon,
+    #canvas-controls.expanded .proficiency-icon,
+    #canvas-controls.expanded .age-icon {
+        opacity: 0; /* Hide icon, show text so users know what they are clicking */
+    }
+    
+    #canvas-controls.expanded .register-text,
+    #canvas-controls.expanded .proficiency-text,
+    #canvas-controls.expanded .age-text {
+        opacity: 1;
+    }
 }
