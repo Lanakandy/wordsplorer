@@ -218,6 +218,34 @@ header h1 {
     letter-spacing: 0.3px; 
 }
 
+.category-btn {
+    background: var(--btn-bg); border: 1px solid var(--btn-border); color: var(--dock-text-color);
+    border-radius: 16px; padding: 12px 8px; cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    min-width: 100px; position: relative; overflow: hidden;
+}
+.category-btn:hover {
+    background: var(--btn-hover); transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(255, 107, 71, 0.3); border-color: var(--primary-coral);
+}
+.category-btn.active {
+    background: var(--btn-active); color: var(--text-light); font-weight: 600;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(255, 107, 71, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+.color-dot-container {
+    width: 45px; height: 45px; background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px; display: flex; justify-content: center; align-items: center;
+    transition: all 0.3s ease;
+}
+.category-btn:hover .color-dot-container { transform: scale(1.1); }
+.color-dot {
+    width: 28px; height: 28px; border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); transition: all 0.3s ease;
+}
+.category-btn:hover .color-dot { transform: scale(1.1); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
+.category-btn span { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
 
 /* ===== START OF ENHANCED D3 STYLES SECTION ===== */
 
@@ -1082,12 +1110,72 @@ header h1 {
         scrollbar-width: none;  /* Firefox */
     }
 
+/* ========================================================= */
+/* --- ENHANCED RESPONSIVE DESIGN & MOBILE FIXES ---         */
+/* ========================================================= */
+
+/* 1. NUCLEAR OPTION: Force hide Mobile Settings Toggle on desktop */
 div#canvas-controls button#mobile-settings-toggle {
     display: none !important;
 }
 
-@media screen and (max-width: 768px) {
-    /* 2. Show ONLY on screens smaller than 768px */
+/* For Tablets and Small Desktops (e.g., up to 1200px) */
+@media (max-width: 1200px) {
+    #controls-dock {
+        flex-wrap: wrap;
+        justify-content: center; 
+        row-gap: 20px; 
+    }
+}
+
+/* For Mobile Devices (e.g., up to 768px) */
+@media (max-width: 768px) {
+    #app-wrapper { 
+        padding: 10px; 
+        gap: 10px; 
+    }
+    .title-container { 
+        padding: 10px 15px; 
+        border-radius: 16px;
+    }
+    header h1 { font-size: 1.5rem; }
+    .header-logo { height: 30px; margin-right: 12px; }
+
+    /* Mobile Dock Fix: Horizontal Scrolling */
+    #controls-dock {
+        flex-direction: row;
+        flex-wrap: nowrap; 
+        overflow-x: auto;  
+        justify-content: flex-start; 
+        padding: 15px;
+        -webkit-overflow-scrolling: touch; 
+        scroll-snap-type: x mandatory; 
+        /* Hide scrollbar */
+        -ms-overflow-style: none;  
+        scrollbar-width: none;  
+    }
+    #controls-dock::-webkit-scrollbar {
+        display: none;
+    }
+
+    .category-buttons, .utility-buttons {
+        flex-shrink: 0;
+    }
+
+    .category-btn, .utility-btn {
+        scroll-snap-align: start;
+    }
+
+    /* Remove category divider on mobile */
+    .category-buttons {
+        padding-right: 0;
+        border-right: none;
+    }
+    .utility-buttons {
+        padding-left: 0;
+    }
+
+    /* Mobile Settings Dropdown */
     div#canvas-controls button#mobile-settings-toggle {
         display: flex !important; 
         margin-bottom: 5px;
@@ -1102,12 +1190,10 @@ div#canvas-controls button#mobile-settings-toggle {
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
-    /* Hide all control buttons (except the new toggle) initially */
     #canvas-controls:not(.expanded) > *:not(#mobile-settings-toggle) {
         display: none !important;
     }
     
-    /* When user taps the cog icon, format it as a frosted drop-down box */
     #canvas-controls.expanded {
         background: var(--dock-bg) !important;
         backdrop-filter: blur(15px);
@@ -1121,19 +1207,19 @@ div#canvas-controls button#mobile-settings-toggle {
     #canvas-controls.expanded #zoom-controls,
     #canvas-controls.expanded #onboarding-help-btn {
         margin-top: 10px;
-        width: 45px !important; /* Unified wider tap targets */
+        width: 45px !important; 
     }
 
     #canvas-controls.expanded #register-toggle-btn,
     #canvas-controls.expanded #proficiency-toggle-btn,
     #canvas-controls.expanded #age-toggle-btn {
-        width: 145px !important; /* Allow them to show their text permanently on mobile menu */
+        width: 145px !important; 
     }
 
     #canvas-controls.expanded .register-icon,
     #canvas-controls.expanded .proficiency-icon,
     #canvas-controls.expanded .age-icon {
-        opacity: 0 !important; /* Hide icon, show text so users know what they are clicking */
+        opacity: 0 !important; 
     }
     
     #canvas-controls.expanded .register-text,
@@ -1141,15 +1227,7 @@ div#canvas-controls button#mobile-settings-toggle {
     #canvas-controls.expanded .age-text {
         opacity: 1 !important;
     }
-
-@media (max-width: 768px) {
-    .category-buttons {
-        padding-right: 0;
-        border-right: none;
-    }
-    .utility-buttons {
-        padding-left: 0;
-}
+} 
 
 /* --- History Button Archive Pulse --- */
 .needs-attention-history { 
