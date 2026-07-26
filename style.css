@@ -1058,13 +1058,14 @@ header h1 {
         scrollbar-width: none;  /* Firefox */
     }
 
-#mobile-settings-toggle {
+#canvas-controls #mobile-settings-toggle {
     display: none;
     z-index: 100;
 }
 
 @media (max-width: 768px) {
-    #mobile-settings-toggle {
+    /* 2. Show on mobile */
+    #canvas-controls #mobile-settings-toggle {
         display: flex; 
         margin-bottom: 5px;
     }
