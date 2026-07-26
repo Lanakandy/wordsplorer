@@ -83,6 +83,34 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+const utilityButtons = document.querySelector('.utility-buttons');
+    if (utilityButtons) {
+        const historyBtn = document.createElement('button');
+        historyBtn.id = 'history-btn';
+        historyBtn.className = 'utility-btn';
+        historyBtn.dataset.type = 'history-action'; // Safe bypass for handleDockClick
+        historyBtn.title = 'View Archived Words';
+        historyBtn.innerHTML = `
+            <svg viewBox="0 0 24 24" width="24" height="24">
+                <path fill="currentColor" d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/>
+            </svg>
+            <span>History</span>
+        `;
+        utilityButtons.insertBefore(historyBtn, utilityButtons.firstChild);
+
+        // When clicked, fly the camera to the History Node!
+        historyBtn.addEventListener('click', () => {
+            const historyCluster = graphClusters.get(HISTORY_CLUSTER_ID);
+            if (!historyCluster || historyCluster.nodes.length <= 1) {
+                tooltip.textContent = "No history yet!\nAdd more than 3 words to see older ones archived here.";
+                tooltip.classList.add('visible');
+                setTimeout(() => tooltip.classList.remove('visible'), 3000);
+                return;
+            }
+            panToNode(historyCluster.center, 1.0);
+        });
+    }
+
     function playClickSound() {
         clickSound.currentTime = 0; 
         clickSound.play().catch(error => console.error("Error playing click sound:", error));
@@ -425,10 +453,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 selection.append("text").text('+').style("font-size", "24px").style("font-weight", "300").style("fill", "var(--primary-coral)");
             } else {
                 if (d.isHistory) {
-                    selection.style("opacity", 0.7);
-                    selection.append("circle").attr("r", 25).style("fill", "var(--text-muted)");
-                    selection.append("text").attr("class", "node-text").text(d.word).attr("dy", "0.3em");
+                    selection.style("opacity", 0.9);
+                    selection.append("circle")
+                        .attr("r", 30) // slightly larger for readability
+                        .style("fill", "var(--canvas-bg)")
+                        .style("stroke", "var(--text-muted)")
+                        .style("stroke-width", "2px")
+                        .style("stroke-dasharray", "4,4"); // Makes it look like a "ghost" node
+                    selection.append("text")
+                        .attr("class", "node-text")
+                        .text(d.word)
+                        .attr("dy", "0.3em")
+                        .style("fill", "var(--canvas-text-color)");
                     selection.style("cursor", "pointer");
+                    
+                    // Assign physics dimensions so they don't visually overlap and clump together
+                    d.width = 60; 
+                    d.height = 60;
+                }
                 } else {
                     selection.style("opacity", 1);
                     const isExample = d.type === 'example';
@@ -653,11 +695,19 @@ document.addEventListener('DOMContentLoaded', () => {
                         clusterId: HISTORY_CLUSTER_ID,
                         fx: null,
                         fy: null,
-                        // Scatter coordinates to prevent exact physics overlap masking
                         x: (oldestNodeToArchive.x || 0) + (Math.random() - 0.5) * 50,
-                        y: (oldestNodeToArchive.y || 0) + (Math.random() - 0.5) * 50
+                        y: (oldestNodeToArchive.y || 0) + (Math.random() - 0.5) * 50,
+                        width: 60,  // Add explicit physics dimensions
+                        height: 60
                     };
                     historyCluster.nodes.push(historyNode);
+
+                    // Flash the new History button to teach the user where the word went
+                    const hBtn = document.getElementById('history-btn');
+                    if (hBtn) {
+                        hBtn.classList.add('needs-attention-history');
+                        setTimeout(() => hBtn.classList.remove('needs-attention-history'), 2500);
+                    }
                 }
             }
 

@@ -1118,3 +1118,15 @@ div#canvas-controls button#mobile-settings-toggle {
         opacity: 1 !important;
     }
 }
+
+/* --- History Button Archive Pulse --- */
+.needs-attention-history { 
+    animation: pulse-glow-history 2.5s ease-in-out; 
+}
+
+@keyframes pulse-glow-history {
+    0% { box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-color: var(--btn-border); }
+    25% { box-shadow: 0 0 20px rgba(155, 81, 224, 0.6); border-color: #9B51E0; transform: scale(1.05); }
+    50% { box-shadow: 0 0 20px rgba(155, 81, 224, 0.6); border-color: #9B51E0; transform: scale(1.05); }
+    100% { box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-color: var(--btn-border); transform: scale(1); }
+}
