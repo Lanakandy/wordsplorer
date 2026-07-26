@@ -169,14 +169,20 @@ header h1 {
 .category-buttons { 
     display: flex; 
     gap: 12px; 
-    padding-right: 20px; /* Adds space before the line */
-    border-right: 2px solid var(--btn-border); /* The elegant divider line */
+    padding-right: 15px; 
+    border-right: 2px solid var(--btn-border); /* Divider 1 */
+}
+
+.game-actions {
+    display: flex;
+    padding: 0 15px; /* Spacing on both sides of the Play button */
+    border-right: 2px solid var(--btn-border); /* Divider 2 */
 }
 
 .utility-buttons { 
     display: flex; 
     gap: 10px; 
-    padding-left: 10px; /* Adds space after the line */
+    padding-left: 15px; 
 }
 
 /* --- SMALLER, CLEANER UTILITY BUTTONS --- */
@@ -1196,8 +1202,9 @@ div#canvas-controls button#mobile-settings-toggle {
     }
 
     /* Remove category divider on mobile */
-    .category-buttons {
+    .category-buttons, .game-actions {
         padding-right: 0;
+        padding-left: 0;
         border-right: none;
     }
     .utility-buttons {
