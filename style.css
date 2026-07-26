@@ -116,8 +116,11 @@
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
     background: var(--app-bg); color: var(--text-light); overflow: hidden;
-    height: 100vh; position: relative;
+    height: 100vh; /* Fallback for older browsers */
+    height: 100dvh; /* Force layout to adapt to dynamic address/navigation bars */
+    position: relative;
 }
+
 body::before {
     content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background-image: 
@@ -1011,12 +1014,16 @@ header h1 {
 @media (max-width: 768px) {
     #app-wrapper { 
         padding: 10px; 
+        /* Adds extra padding at the bottom specifically for mobile system overlays */
+        padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
         gap: 10px; 
     }
+
     .title-container { 
         padding: 10px 15px; 
         border-radius: 16px;
     }
+
     header h1 { font-size: 1.5rem; }
     .header-logo { height: 30px; margin-right: 12px; }
 
