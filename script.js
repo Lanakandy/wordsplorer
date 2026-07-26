@@ -83,32 +83,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-const utilityButtons = document.querySelector('.utility-buttons');
-    if (utilityButtons) {
+const playBtn = document.getElementById('play-game-btn');
+    if (playBtn && !document.getElementById('history-btn')) {
         const historyBtn = document.createElement('button');
         historyBtn.id = 'history-btn';
         historyBtn.className = 'utility-btn';
-        historyBtn.dataset.type = 'history-action'; // Safe bypass for handleDockClick
-        historyBtn.title = 'View Archived Words';
+        historyBtn.title = 'View Search History';
         historyBtn.innerHTML = `
             <svg viewBox="0 0 24 24" width="24" height="24">
                 <path fill="currentColor" d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/>
             </svg>
             <span>History</span>
         `;
-        utilityButtons.insertBefore(historyBtn, utilityButtons.firstChild);
-
-        // When clicked, fly the camera to the History Node!
-        historyBtn.addEventListener('click', () => {
-            const historyCluster = graphClusters.get(HISTORY_CLUSTER_ID);
-            if (!historyCluster || historyCluster.nodes.length <= 1) {
-                tooltip.textContent = "No history yet!\nAdd more than 3 words to see older ones archived here.";
-                tooltip.classList.add('visible');
-                setTimeout(() => tooltip.classList.remove('visible'), 3000);
-                return;
-            }
-            panToNode(historyCluster.center, 1.0);
-        });
+        // Insert it directly AFTER the Play button
+        playBtn.parentNode.insertBefore(historyBtn, playBtn.nextSibling);
     }
 
     function playClickSound() {
@@ -678,35 +666,42 @@ const utilityButtons = document.querySelector('.utility-buttons');
             }
 
             const historyCluster = graphClusters.get(HISTORY_CLUSTER_ID);
-            const nodeInHistory = historyCluster.nodes.find(n => n.word === lowerWord);
+            
+            // 1. Log EVERY new word to history immediately (if not already there)
+            const alreadyInHistory = historyCluster.nodes.some(n => n.word === lowerWord && n.isHistory);
+            
+            if (!alreadyInHistory) {
+                const historyNode = {
+                    id: `hist-${lowerWord}`, // Unique ID prevents physics engine conflicts
+                    word: lowerWord,
+                    isCentral: false,
+                    isHistory: true,
+                    type: 'history', 
+                    clusterId: HISTORY_CLUSTER_ID,
+                    fx: null,
+                    fy: null,
+                    x: historyCluster.center.x + (Math.random() - 0.5) * 50,
+                    y: historyCluster.center.y + (Math.random() - 0.5) * 50,
+                    width: 60,
+                    height: 60,
+                    visible: true
+                };
+                historyCluster.nodes.push(historyNode);
 
-            if (nodeInHistory) historyCluster.nodes = historyCluster.nodes.filter(n => n.word !== lowerWord);
+                // Pulse the history button to show the user it was safely stored
+                const hBtn = document.getElementById('history-btn');
+                if (hBtn) {
+                    hBtn.classList.add('needs-attention-history');
+                    setTimeout(() => hBtn.classList.remove('needs-attention-history'), 2500);
+                }
+            }
 
+            // 2. Remove the oldest active word from the screen if limit is reached
+            // (We don't need to move it to history here, because it's already there!)
             if (centralNodes.length >= MAX_ACTIVE_CLUSTERS) {
                 const oldestNodeToArchive = centralNodes.shift();
                 if (oldestNodeToArchive) {
                     graphClusters.delete(oldestNodeToArchive.word);
-                    const historyNode = {
-                        ...oldestNodeToArchive,
-                        isCentral: false,
-                        isHistory: true,
-                        type: 'history', // Clearer styling targeting
-                        clusterId: HISTORY_CLUSTER_ID,
-                        fx: null,
-                        fy: null,
-                        x: (oldestNodeToArchive.x || 0) + (Math.random() - 0.5) * 50,
-                        y: (oldestNodeToArchive.y || 0) + (Math.random() - 0.5) * 50,
-                        width: 60,  // Add explicit physics dimensions
-                        height: 60
-                    };
-                    historyCluster.nodes.push(historyNode);
-
-                    // Flash the new History button to teach the user where the word went
-                    const hBtn = document.getElementById('history-btn');
-                    if (hBtn) {
-                        hBtn.classList.add('needs-attention-history');
-                        setTimeout(() => hBtn.classList.remove('needs-attention-history'), 2500);
-                    }
                 }
             }
 
@@ -717,7 +712,6 @@ const utilityButtons = document.querySelector('.utility-buttons');
             const newestNode = repositionAllClusters();
             if (newestNode) panToNode(newestNode, 1.1);
         }
-
         currentActiveCentral = lowerWord;
         currentView = 'meaning';
         viewState = { offset: 0, hasMore: true };
@@ -941,6 +935,17 @@ const utilityButtons = document.querySelector('.utility-buttons');
                 case 'save-btn': saveAsPng(); break;
                 case 'fullscreen-btn': toggleFullScreen(); break;
                 case 'theme-toggle-btn': toggleTheme(); break;
+                // NEW: Handle history button clicks natively here!
+                case 'history-btn': 
+                    const historyCluster = graphClusters.get(HISTORY_CLUSTER_ID);
+                    if (!historyCluster || historyCluster.nodes.length <= 1) {
+                        tooltip.textContent = "No history yet!\nStart searching for words to build your history.";
+                        tooltip.classList.add('visible');
+                        setTimeout(() => tooltip.classList.remove('visible'), 3000);
+                        return;
+                    }
+                    panToNode(historyCluster.center, 1.0); 
+                    break;
             }
         }
     }
