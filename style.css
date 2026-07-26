@@ -1058,23 +1058,23 @@ header h1 {
         scrollbar-width: none;  /* Firefox */
     }
 
-#mobile-settings-toggle {
+div#canvas-controls button#mobile-settings-toggle {
     display: none !important;
 }
 
-@media (max-width: 768px) {
-    /* 2. Show on mobile */
-    #mobile-settings-toggle {
+@media screen and (max-width: 768px) {
+    /* 2. Show ONLY on screens smaller than 768px */
+    div#canvas-controls button#mobile-settings-toggle {
         display: flex !important; 
         margin-bottom: 5px;
         z-index: 100;
     }
     
     #canvas-controls {
-        background: transparent;
-        border: none;
-        box-shadow: none;
-        padding: 0;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
@@ -1085,36 +1085,36 @@ header h1 {
     
     /* When user taps the cog icon, format it as a frosted drop-down box */
     #canvas-controls.expanded {
-        background: var(--dock-bg);
+        background: var(--dock-bg) !important;
         backdrop-filter: blur(15px);
-        border: 1px solid var(--btn-border);
+        border: 1px solid var(--btn-border) !important;
         border-radius: 12px;
-        padding: 10px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        padding: 10px !important;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
     }
     
     #canvas-controls.expanded .control-btn,
     #canvas-controls.expanded #zoom-controls,
     #canvas-controls.expanded #onboarding-help-btn {
         margin-top: 10px;
-        width: 45px; /* Unified wider tap targets */
+        width: 45px !important; /* Unified wider tap targets */
     }
 
     #canvas-controls.expanded #register-toggle-btn,
     #canvas-controls.expanded #proficiency-toggle-btn,
     #canvas-controls.expanded #age-toggle-btn {
-        width: 145px; /* Allow them to show their text permanently on mobile menu */
+        width: 145px !important; /* Allow them to show their text permanently on mobile menu */
     }
 
     #canvas-controls.expanded .register-icon,
     #canvas-controls.expanded .proficiency-icon,
     #canvas-controls.expanded .age-icon {
-        opacity: 0; /* Hide icon, show text so users know what they are clicking */
+        opacity: 0 !important; /* Hide icon, show text so users know what they are clicking */
     }
     
     #canvas-controls.expanded .register-text,
     #canvas-controls.expanded .proficiency-text,
     #canvas-controls.expanded .age-text {
-        opacity: 1;
+        opacity: 1 !important;
     }
 }
