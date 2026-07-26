@@ -69,6 +69,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const clickSound = new Audio('assets/click.wav'); 
     clickSound.volume = 0.5;
 
+    const canvasControls = document.getElementById('canvas-controls');
+    if (canvasControls) {
+        const toggleBtn = document.createElement('button');
+        toggleBtn.id = 'mobile-settings-toggle';
+        toggleBtn.className = 'control-btn';
+        toggleBtn.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>`;
+        canvasControls.insertBefore(toggleBtn, canvasControls.firstChild);
+        
+        toggleBtn.addEventListener('click', () => {
+            canvasControls.classList.toggle('expanded');
+        });
+    }
+
     function playClickSound() {
         clickSound.currentTime = 0; 
         clickSound.play().catch(error => console.error("Error playing click sound:", error));
@@ -279,7 +292,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function getCollisionRadius(d) {
         const isMobile = window.innerWidth < 480;
         if (d.isCentral) return isMobile ? 45 : 60;
-        if (d.width && d.height) return Math.sqrt(d.width * d.width + d.height * d.height) / 2 + (isMobile ? 8 : 15);
+        // Adjusted padding slightly for better rectangular breathing room
+        if (d.width && d.height) return (Math.sqrt(d.width * d.width + d.height * d.height) / 2) + (isMobile ? 12 : 20);
         if (d.type === 'add') return isMobile ? 20 : 25;
         return isMobile ? 35 : 45;
     }
@@ -339,10 +353,28 @@ document.addEventListener('DOMContentLoaded', () => {
         
         graphGroup.selectAll(".status-text, .prompt-plus, .loading-spinner").remove();
 
+        // 2. CRITICAL FIX: Init the Simulation BEFORE drawing links so source/target ID strings become node objects
+        simulation.nodes(visibleNodes);
+        simulation.force("link").links(visibleLinks);
+
+        // 3. Draw links natively into the enter join, replacing the broken block at the bottom
         graphGroup.selectAll(".link").data(visibleLinks, d => `${d.source.id || d.source}-${d.target.id || d.target}`).join(
-            enter => enter.append("line").attr("class", d => `link ${d.target.type === 'example' ? 'link-example' : ''}`).style("opacity", 0).style("stroke-width", 0)
-                .transition().duration(800).delay((d, i) => i * 50).ease(d3.easeCircleOut).style("opacity", 1).style("stroke-width", d => d.type === 'cross-cluster' ? 2 : 1),
-            update => update.attr("class", d => `link ${d.target.type === 'example' ? 'link-example' : ''}`),
+            enter => enter.append("line")
+                .attr("class", d => `link ${d.target.type === 'example' ? 'link-example' : ''}`)
+                .style("opacity", 0)
+                .style("stroke-width", 0)
+                .style("stroke", d => d.type === 'cross-cluster' ? 'var(--accent-orange)' : d.target.type === 'example' ? 'var(--primary-coral)' : 'var(--text-secondary)')
+                .style("stroke-dasharray", d => d.type === 'cross-cluster' ? "8,4" : "none")
+                .call(g => g.transition().duration(800).delay((d, i) => i * 30).ease(d3.easeCircleOut)
+                    .style("opacity", d => d.target.type === 'example' ? 0.8 : 0.6)
+                    .style("stroke-width", d => d.type === 'cross-cluster' ? 2 : d.target.type === 'example' ? 1.5 : 1)
+                ),
+            update => update
+                .attr("class", d => `link ${d.target.type === 'example' ? 'link-example' : ''}`)
+                .style("stroke", d => d.type === 'cross-cluster' ? 'var(--accent-orange)' : d.target.type === 'example' ? 'var(--primary-coral)' : 'var(--text-secondary)')
+                .style("stroke-dasharray", d => d.type === 'cross-cluster' ? "8,4" : "none")
+                .style("opacity", d => d.target.type === 'example' ? 0.8 : 0.6)
+                .style("stroke-width", d => d.type === 'cross-cluster' ? 2 : d.target.type === 'example' ? 1.5 : 1),
             exit => exit.transition().duration(400).ease(d3.easeCircleIn).style("opacity", 0).style("stroke-width", 0).remove()
         );
 
@@ -352,7 +384,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 .attr("transform", d => {
                     const cluster = graphClusters.get(d.clusterId);
                     const startPos = cluster ? cluster.center : { x: width / 2, y: height / 2 };
-                    return `translate(${startPos.x},${startPos.y}) scale(0.1)`;
+                    // Give nodes a tiny randomized jitter offset so the physics engine doesn't glitch when overlapping
+                    const jitterX = (Math.random() - 0.5) * 40;
+                    const jitterY = (Math.random() - 0.5) * 40;
+                    return `translate(${startPos.x + jitterX},${startPos.y + jitterY}) scale(0.1)`;
                 })
                 .call(g => g.transition().duration(600)
                     .delay((d, i) => (d.isCentral ? 0 : d.type === 'add' ? visibleNodes.length * 30 : i * 80))
@@ -425,7 +460,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                             pendingHeightCalculations--;
                             if (pendingHeightCalculations === 0) {
-                                if (simulation.alpha() < 0.1) simulation.alpha(0.1).restart();
+                                // 4. CRITICAL FIX: Tell D3 to refresh the radii bounds for collision!
+                                simulation.force("collision").initialize(simulation.nodes());
+                                // Give the simulation a brief burst of extra heat to organically repel the new big rectangles
+                                if (simulation.alpha() < 0.4) simulation.alpha(0.4).restart();
                             }
                         }
                     }, 50);
@@ -450,14 +488,7 @@ document.addEventListener('DOMContentLoaded', () => {
             exit => exit.transition().duration(400).style('opacity', 0).remove()
         );
 
-        graphGroup.selectAll(".link")
-            .style("stroke", d => d.type === 'cross-cluster' ? 'var(--accent-orange)' : d.target.type === 'example' ? 'var(--primary-coral)' : 'var(--text-secondary)')
-            .style("stroke-width", d => d.type === 'cross-cluster' ? 2 : d.target.type === 'example' ? 1.5 : 1)
-            .style("stroke-dasharray", d => d.type === 'cross-cluster' ? "8,4" : "none")
-            .style("opacity", d => d.target.type === 'example' ? 0.8 : 0.6);
-            
-        simulation.nodes(visibleNodes);
-        simulation.force("link").links(visibleLinks);
+                    
         simulation.alpha(1).restart();
         graphGroup.selectAll('.central-node').raise();
         updateCentralNodeState();
@@ -724,7 +755,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (exampleText) {
                     const exId = `${nodeData.id}-ex`;
-                    cluster.nodes.push({ id: exId, text: exampleText, type: 'example', sourceNodeId: nodeData.id, clusterId: nodeData.clusterId, visible: true });
+                    // Spawn near the parent node so it organically pushes out
+                    const jitter = () => (Math.random() - 0.5) * 30;
+                    cluster.nodes.push({ 
+                        id: exId, text: exampleText, type: 'example', sourceNodeId: nodeData.id, clusterId: nodeData.clusterId, visible: true,
+                        x: (nodeData.x || cluster.center.x) + jitter(),
+                        y: (nodeData.y || cluster.center.y) + jitter() 
+                    });
                     cluster.links.push({ source: nodeData.id, target: exId, type: 'example' });
                     updateGraph();
                 } else throw new Error('No valid example received from server');
@@ -765,13 +802,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 // De-duplicate locally using string equivalence
                 if (cluster.nodes.some(n => n.text && n.text.toLowerCase() === nodeData.text.toLowerCase())) return;
 
-                // Deterministic Unique ID using index to prevent D3 ID collision bugs
                 const nodeId = `${currentActiveCentral}-${view}-${index}`;
-                const newNode = { ...nodeData, id: nodeId, type: view, clusterId: currentActiveCentral, visible: true, lang: options.language };
+                // Spawn with jitter
+                const jitter = () => (Math.random() - 0.5) * 40;
+                const newNode = { 
+                    ...nodeData, id: nodeId, type: view, clusterId: currentActiveCentral, visible: true, lang: options.language,
+                    x: cluster.center.x + jitter(), 
+                    y: cluster.center.y + jitter() 
+                };
                 cluster.nodes.push(newNode);
                 cluster.links.push({ source: `central-${currentActiveCentral}`, target: nodeId });
             });
-
             if (!cluster.nodes.some(n => n.id === `add-${currentActiveCentral}`)) {
                 const addNode = { id: `add-${currentActiveCentral}`, type: 'add', clusterId: currentActiveCentral, visible: true };
                 cluster.nodes.push(addNode);
