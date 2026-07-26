@@ -637,6 +637,10 @@ const utilityButtons = document.querySelector('.utility-buttons');
         if (event.defaultPrevented) return;
         event.stopPropagation();
 
+        tooltip.classList.remove('visible'); 
+        tooltip.style.transform = 'translateY(0)'; 
+        svg.on('mousemove.tooltip', null);
+
         const selection = d3.select(event.currentTarget);
         selection.transition().duration(150).ease(d3.easeCircleOut).attr("transform", `translate(${d.x},${d.y}) scale(0.9)`)
             .transition().duration(150).ease(d3.easeCircleOut).attr("transform", `translate(${d.x},${d.y}) scale(1)`);
