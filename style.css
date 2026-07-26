@@ -220,10 +220,14 @@ header h1 {
 
 .category-btn {
     background: var(--btn-bg); border: 1px solid var(--btn-border); color: var(--dock-text-color);
-    border-radius: 16px; padding: 12px 8px; cursor: pointer;
+    border-radius: 14px; 
+    padding: 10px 4px; /* Tighter padding */
+    cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex; flex-direction: column; align-items: center; gap: 8px;
-    min-width: 100px; position: relative; overflow: hidden;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    min-width: 85px; /* SHRUNK from 100px so they fit on laptops */
+    flex: 1; /* Allows them to dynamically stretch/shrink perfectly */
+    position: relative; overflow: hidden;
 }
 .category-btn:hover {
     background: var(--btn-hover); transform: translateY(-3px) scale(1.02);
@@ -235,17 +239,19 @@ header h1 {
     box-shadow: 0 8px 30px rgba(255, 107, 71, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 .color-dot-container {
-    width: 45px; height: 45px; background: rgba(255, 255, 255, 0.15);
-    border-radius: 12px; display: flex; justify-content: center; align-items: center;
+    width: 38px; height: 38px; /* SHRUNK from 45px */
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 10px; display: flex; justify-content: center; align-items: center;
     transition: all 0.3s ease;
 }
 .category-btn:hover .color-dot-container { transform: scale(1.1); }
 .color-dot {
-    width: 28px; height: 28px; border-radius: 50%;
+    width: 22px; height: 22px; /* SHRUNK from 28px */
+    border-radius: 50%;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); transition: all 0.3s ease;
 }
 .category-btn:hover .color-dot { transform: scale(1.1); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
-.category-btn span { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.category-btn span { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
 
 /* ===== START OF ENHANCED D3 STYLES SECTION ===== */
 
@@ -539,19 +545,42 @@ header h1 {
 
 /* --- Utility Buttons & Others --- */
 .utility-btn {
-    background: var(--btn-bg); border: 1px solid var(--btn-border);
-    border-radius: 16px; cursor: pointer;
+    background: var(--btn-bg); 
+    border: 1px solid var(--btn-border);
+    border-radius: 12px; 
+    cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 6px; width: 80px; height: 80px; color: var(--dock-text-color);
-    position: relative; overflow: hidden;
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center;
+    gap: 3px; 
+    width: 58px; /* SHRUNK from 65px */
+    height: 58px; /* SHRUNK from 65px */
+    color: var(--dock-text-color);
+    position: relative; 
+    overflow: hidden;
 }
+
 .utility-btn:hover {
-    background: var(--btn-hover); transform: translateY(-3px) scale(1.05);
-    box-shadow: 0 8px 25px rgba(255, 107, 71, 0.3); border-color: var(--primary-coral);
+    background: var(--btn-hover); 
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 6px 20px rgba(255, 107, 71, 0.25); 
+    border-color: var(--primary-coral);
 }
-.utility-btn svg { width: 28px; height: 28px; fill: currentColor; transition: all 0.3s ease; }
-.utility-btn span { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.5px; }
+
+.utility-btn svg { 
+    width: 20px; /* Shrunk icon to match */
+    height: 20px; 
+    fill: currentColor; 
+    transition: all 0.3s ease; 
+}
+
+.utility-btn span { 
+    font-size: 0.6rem; /* Shrunk font slightly */
+    font-weight: 600; 
+    letter-spacing: 0.2px; 
+}
 
 /* --- Language Modal --- */
 .modal-overlay {
